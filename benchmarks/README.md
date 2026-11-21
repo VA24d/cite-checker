@@ -202,6 +202,10 @@ The judging rules changed in two ways. A scope gap (another species, cohort or c
 
 Macro F1, with correct counts in brackets: 112 of 126 overall (89%). No quote failed validation. Opus read about 43,000 input tokens across the four samples, and Haiku about 69,000.
 
+Opus judging every pair on its own got 111 of 126 (16, 21, 33 and 41 on the four samples), one fewer than Haiku with Opus on the escalated pairs. The tiered run sent Opus 73 of the 126 pairs.
+
+Structured mode (`judge --structured`, rules in `references/judging-structured.md`) asks Haiku for quotes, a direction, a number check and extra clauses, and a script derives the verdict. On one vote it got 15, 18 and 31 on dev, holdout and confirmation, no better than free-form Haiku, and one fresh shard failed under a rate limit. `--votes 3` runs were cut short by rate limits and are not reported. Free-form judging stays the default.
+
 About half of the 14 remaining errors are cases where the abstract appears to settle the claim differently from the SciFact label. The source says IFN-gamma-deficient mice "developed fatal autoimmune myocarditis" for a claim that they are resistant (label: not enough information). It says Scribble loss promotes tumorigenesis for a claim that it prevents it (label: not enough information). It says heart failure incidence did not change for a claim of a 10% fall (label: supported). The others are inferences the models declined to make, such as reading a non-comparative abstract as contradicting a comparative claim. Results: `scifact-2.1-shards-results.json`.
 
 ## Closed-book stress test
