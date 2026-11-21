@@ -1,0 +1,4 @@
+pytest
+pytest-testmon
+pytest-xdist
+pytest-timeout

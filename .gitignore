@@ -1,0 +1,9 @@
+.venv/
+.testmondata
+__pycache__/
+*.pyc
+dist/
+http-cache/
+.DS_Store
+graft/
+.trail/

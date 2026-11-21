@@ -1,0 +1,293 @@
+{
+  "scifact_sha256": "11c621288d41ac144d29b13b0f8503b3820b7d6e8b1f6ff24dff335c196d76be",
+  "retrieval": {
+    "1": {
+      "n": 209,
+      "any_rationale_sentence": 135,
+      "complete_rationale_set": 130
+    },
+    "3": {
+      "n": 209,
+      "any_rationale_sentence": 203,
+      "complete_rationale_set": 202
+    },
+    "5": {
+      "n": 209,
+      "any_rationale_sentence": 206,
+      "complete_rationale_set": 206
+    }
+  },
+  "trials": {
+    "skill_dev": {
+      "n": 18,
+      "correct": 14,
+      "macro_f1": 0.8190476190476191,
+      "scores": {
+        "supported": {
+          "true_positive": 4,
+          "false_positive": 0,
+          "false_negative": 2,
+          "f1": 0.8
+        },
+        "contradicted": {
+          "true_positive": 4,
+          "false_positive": 0,
+          "false_negative": 2,
+          "f1": 0.8
+        },
+        "insufficient": {
+          "true_positive": 6,
+          "false_positive": 2,
+          "false_negative": 0,
+          "f1": 0.8571428571428571
+        }
+      },
+      "wrong": [
+        {
+          "claim_id": "item-004",
+          "gold": "supported",
+          "prediction": "insufficient",
+          "reason": "The registry followed patients hospitalized for unstable angina or non-Q-wave myocardial infarction. It reports diabetes-associated mortality and cardiovascular outcomes over two years, with no short-term or long-term bleeding risk result."
+        },
+        {
+          "claim_id": "item-006",
+          "gold": "supported",
+          "prediction": "partially_supported",
+          "reason": "The molecular maps show a pro-inflammatory environment at the centers of tuberculosis granulomas. The observations describe spatial organization at lesion level and do not establish that a granuloma is within an immune cell or that its center induces an immune response."
+        },
+        {
+          "claim_id": "item-014",
+          "gold": "contradicted",
+          "prediction": "partially_supported",
+          "reason": "Matched primary and metastatic skin tumors in mice shared mutations. The abstract describes the signatures of shared and unshared mutations without giving their relative proportions or quantifying overall genomic similarity."
+        },
+        {
+          "claim_id": "item-018",
+          "gold": "contradicted",
+          "prediction": "insufficient",
+          "reason": "The study addresses contamination and its implications for remediation. The supplied abstract does not test cleanup methods or establish how easily dispersed spores can be removed."
+        }
+      ],
+      "rationale_overlap_on_correct_definitive": {
+        "matched": 8,
+        "n": 8
+      },
+      "quote_gate_failures": 0
+    },
+    "control_dev": {
+      "n": 18,
+      "correct": 14,
+      "macro_f1": 0.8190476190476191,
+      "scores": {
+        "supported": {
+          "true_positive": 4,
+          "false_positive": 0,
+          "false_negative": 2,
+          "f1": 0.8
+        },
+        "contradicted": {
+          "true_positive": 4,
+          "false_positive": 0,
+          "false_negative": 2,
+          "f1": 0.8
+        },
+        "insufficient": {
+          "true_positive": 6,
+          "false_positive": 2,
+          "false_negative": 0,
+          "f1": 0.8571428571428571
+        }
+      },
+      "wrong": [
+        {
+          "claim_id": "item-004",
+          "gold": "supported",
+          "prediction": "insufficient",
+          "reason": "The registry reported two-year mortality and cardiovascular outcomes. The abstract does not report bleeding risk at either time horizon."
+        },
+        {
+          "claim_id": "item-006",
+          "gold": "supported",
+          "prediction": "partially_supported",
+          "reason": "The abstract reports a pro-inflammatory environment at granuloma centers. It describes spatial organization within lesions and does not establish that a center within an immune cell induces an inflammatory response."
+        },
+        {
+          "claim_id": "item-014",
+          "gold": "contradicted",
+          "prediction": "partially_supported",
+          "reason": "Matched primary carcinomas and metastases shared mutations, but the abstract also reports non-shared mutations and does not quantify overall genomic similarity. The observations are from a mouse skin tumor model."
+        },
+        {
+          "claim_id": "item-018",
+          "gold": "contradicted",
+          "prediction": "insufficient",
+          "reason": "The abstract notes implications for remediation but does not evaluate disposal methods or establish how easy disposal is."
+        }
+      ],
+      "rationale_overlap_on_correct_definitive": {
+        "matched": 8,
+        "n": 8
+      },
+      "quote_gate_failures": 0
+    },
+    "skill_holdout": {
+      "n": 24,
+      "correct": 18,
+      "macro_f1": 0.7823361823361824,
+      "scores": {
+        "supported": {
+          "true_positive": 5,
+          "false_positive": 0,
+          "false_negative": 3,
+          "f1": 0.7692307692307693
+        },
+        "contradicted": {
+          "true_positive": 6,
+          "false_positive": 1,
+          "false_negative": 2,
+          "f1": 0.8
+        },
+        "insufficient": {
+          "true_positive": 7,
+          "false_positive": 3,
+          "false_negative": 1,
+          "f1": 0.7777777777777778
+        }
+      },
+      "wrong": [
+        {
+          "claim_id": "item-003",
+          "gold": "supported",
+          "prediction": "partially_supported",
+          "reason": "The meta-analysis found a postoperative association with lower prevalence and severity of depression. Its result supports a narrower statement about depression. The claim encompasses mental health generally and describes an impact more causally than the abstract establishes."
+        },
+        {
+          "claim_id": "item-007",
+          "gold": "supported",
+          "prediction": "insufficient",
+          "reason": "The review measured self-reported vision problems in trials of multiphasic screening and found no demonstrated improvement on that measure. Its interval leaves room for a small benefit, and the supplied results cannot establish the categorical claim about vision itself."
+        },
+        {
+          "claim_id": "item-009",
+          "gold": "supported",
+          "prediction": "partially_supported",
+          "reason": "The abstract links patient IgG to hnRNP-A1 and reports that antibodies to hnRNP-A1 cross-reacted with HTLV-1 Tax. It does not identify the binding site as an immunodominant epitope."
+        },
+        {
+          "claim_id": "item-015",
+          "gold": "insufficient",
+          "prediction": "contradicted",
+          "reason": "In this autoimmune myocarditis study, IFN-γ-deficient mice developed fatal disease, contrary to the claimed resistance for that genotype. The abstract leaves the precise α-MyHC/CFA induction regimen and the IFN-γ receptor-deficient genotype unverified."
+        },
+        {
+          "claim_id": "item-022",
+          "gold": "contradicted",
+          "prediction": "insufficient",
+          "reason": "The abstract identifies the compound as CK-2017357 and reports an effect on fast skeletal muscle. It gives no supplied identity link between CK-2017357 and tirasemtiv. If both names refer to the same compound, the reported effect would oppose the claim."
+        },
+        {
+          "claim_id": "item-024",
+          "gold": "contradicted",
+          "prediction": "insufficient",
+          "reason": "In hospitalized patients with acute COPD exacerbation and mild to moderate acidosis, adding ward-based ventilation to standard treatment improved overall outcomes. The abstract reports no separate results for patients selected because conventional treatment produced an inadequate response, so it cannot settle the conditional recommendation."
+        }
+      ],
+      "rationale_overlap_on_correct_definitive": {
+        "matched": 11,
+        "n": 11
+      },
+      "quote_gate_failures": 0
+    },
+    "control_holdout": {
+      "n": 24,
+      "correct": 17,
+      "macro_f1": 0.7690152984270631,
+      "scores": {
+        "supported": {
+          "true_positive": 5,
+          "false_positive": 0,
+          "false_negative": 3,
+          "f1": 0.7692307692307693
+        },
+        "contradicted": {
+          "true_positive": 5,
+          "false_positive": 1,
+          "false_negative": 3,
+          "f1": 0.7142857142857143
+        },
+        "insufficient": {
+          "true_positive": 7,
+          "false_positive": 2,
+          "false_negative": 1,
+          "f1": 0.8235294117647058
+        }
+      },
+      "wrong": [
+        {
+          "claim_id": "item-003",
+          "gold": "supported",
+          "prediction": "partially_supported",
+          "reason": "Postoperative decreases in depression prevalence and symptom severity support a narrower statement about depression. The abstract reports an association and does not establish causal or broadly applicable mental health improvement."
+        },
+        {
+          "claim_id": "item-007",
+          "gold": "supported",
+          "prediction": "partially_supported",
+          "reason": "In older community residents, the assessed screening component failed to improve self-reported visual problems. The review found no trials primarily designed to test vision screening and could not exclude a small benefit, leaving the broader categorical claim unestablished."
+        },
+        {
+          "claim_id": "item-009",
+          "gold": "supported",
+          "prediction": "partially_supported",
+          "reason": "Patient IgG identified hnRNP-A1, and antibodies against this antigen cross-reacted with HTLV-1 Tax. The abstract does not identify the Tax epitope or characterize it as immunodominant."
+        },
+        {
+          "claim_id": "item-015",
+          "gold": "insufficient",
+          "prediction": "contradicted",
+          "reason": "IFN-gamma-deficient mice developed fatal autoimmune disease in the myocarditis study, directly opposing the stated resistance for that deficiency. The abstract does not name the induction protocol or describe IFN-gamma receptor knockout mice."
+        },
+        {
+          "claim_id": "item-020",
+          "gold": "contradicted",
+          "prediction": "partially_supported",
+          "reason": "The model predicted substantial reductions under some ACT scenarios, especially in lower-transmission settings. The abstract gives no general ACT advantage over nongametocytocidal drugs and reports the opposite comparison for a long-prophylaxis regimen in the highest-transmission setting."
+        },
+        {
+          "claim_id": "item-022",
+          "gold": "contradicted",
+          "prediction": "insufficient",
+          "reason": "The abstract names the tested molecule CK-2017357 and reports activity on fast skeletal muscle. It never names tirasemtiv or establishes that the two names refer to the same molecule. If they do, the reported effects oppose the claim."
+        },
+        {
+          "claim_id": "item-024",
+          "gold": "contradicted",
+          "prediction": "insufficient",
+          "reason": "The trial found better in-hospital outcomes when adding non-invasive ventilation to standard treatment in patients with a COPD exacerbation and mild to moderate acidosis. It did not test reducing ventilation conditional on an inadequate response to conventional treatment."
+        }
+      ],
+      "rationale_overlap_on_correct_definitive": {
+        "matched": 10,
+        "n": 10
+      },
+      "quote_gate_failures": 0
+    }
+  },
+  "release_closed_book": {
+    "pairs": 10,
+    "quotes": 8,
+    "gate_failures": 0,
+    "verdicts": {
+      "A/trial": "partially_supported",
+      "B/trial": "contradicted",
+      "C/trial": "insufficient",
+      "D/rep": "insufficient",
+      "E/pilot": "contradicted",
+      "F/field": "contradicted",
+      "G/field": "supported",
+      "H/comparison": "insufficient",
+      "I/pilot": "supported",
+      "I/trial": "insufficient"
+    }
+  }
+}

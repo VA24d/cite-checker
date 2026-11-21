@@ -1,0 +1,345 @@
+{
+  "abstract_judgment": {
+    "unguided": {
+      "n": 36,
+      "correct": 24,
+      "macro_f1": 0.7622807017543859,
+      "scores": {
+        "supported": {
+          "true_positive": 7,
+          "false_positive": 0,
+          "false_negative": 5,
+          "f1": 0.7368421052631579
+        },
+        "contradicted": {
+          "true_positive": 8,
+          "false_positive": 0,
+          "false_negative": 4,
+          "f1": 0.8
+        },
+        "insufficient": {
+          "true_positive": 9,
+          "false_positive": 3,
+          "false_negative": 3,
+          "f1": 0.75
+        }
+      },
+      "wrong": [
+        {
+          "claim_id": "item-002",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-005",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-006",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-012",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-013",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-015",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-017",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-018",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-024",
+          "gold": "contradicted",
+          "prediction": "insufficient"
+        },
+        {
+          "claim_id": "item-031",
+          "gold": "contradicted",
+          "prediction": "insufficient"
+        },
+        {
+          "claim_id": "item-033",
+          "gold": "contradicted",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-035",
+          "gold": "contradicted",
+          "prediction": "insufficient"
+        }
+      ],
+      "rationale_overlap_on_correct_definitive": {
+        "matched": 0,
+        "n": 15
+      },
+      "quote_gate_failures": 0,
+      "accepted_quotes": null
+    },
+    "original": {
+      "n": 36,
+      "correct": 19,
+      "macro_f1": 0.5926301555104801,
+      "scores": {
+        "supported": {
+          "true_positive": 5,
+          "false_positive": 0,
+          "false_negative": 7,
+          "f1": 0.5882352941176471
+        },
+        "contradicted": {
+          "true_positive": 4,
+          "false_positive": 0,
+          "false_negative": 8,
+          "f1": 0.5
+        },
+        "insufficient": {
+          "true_positive": 10,
+          "false_positive": 7,
+          "false_negative": 2,
+          "f1": 0.6896551724137931
+        }
+      },
+      "wrong": [
+        {
+          "claim_id": "item-002",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-005",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-006",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-010",
+          "gold": "supported",
+          "prediction": "insufficient"
+        },
+        {
+          "claim_id": "item-011",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-012",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-013",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-015",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-018",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-024",
+          "gold": "contradicted",
+          "prediction": "insufficient"
+        },
+        {
+          "claim_id": "item-026",
+          "gold": "contradicted",
+          "prediction": "insufficient"
+        },
+        {
+          "claim_id": "item-027",
+          "gold": "contradicted",
+          "prediction": "insufficient"
+        },
+        {
+          "claim_id": "item-028",
+          "gold": "contradicted",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-029",
+          "gold": "contradicted",
+          "prediction": "insufficient"
+        },
+        {
+          "claim_id": "item-031",
+          "gold": "contradicted",
+          "prediction": "insufficient"
+        },
+        {
+          "claim_id": "item-033",
+          "gold": "contradicted",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-035",
+          "gold": "contradicted",
+          "prediction": "insufficient"
+        }
+      ],
+      "rationale_overlap_on_correct_definitive": {
+        "matched": 9,
+        "n": 9
+      },
+      "quote_gate_failures": 0,
+      "accepted_quotes": 70
+    },
+    "scope_review_candidate": {
+      "n": 36,
+      "correct": 19,
+      "macro_f1": 0.6143790849673203,
+      "scores": {
+        "supported": {
+          "true_positive": 5,
+          "false_positive": 0,
+          "false_negative": 7,
+          "f1": 0.5882352941176471
+        },
+        "contradicted": {
+          "true_positive": 5,
+          "false_positive": 0,
+          "false_negative": 7,
+          "f1": 0.5882352941176471
+        },
+        "insufficient": {
+          "true_positive": 9,
+          "false_positive": 6,
+          "false_negative": 3,
+          "f1": 0.6666666666666666
+        }
+      },
+      "wrong": [
+        {
+          "claim_id": "item-002",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-005",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-006",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-010",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-011",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-012",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-013",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-015",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-017",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-018",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-024",
+          "gold": "contradicted",
+          "prediction": "insufficient"
+        },
+        {
+          "claim_id": "item-026",
+          "gold": "contradicted",
+          "prediction": "insufficient"
+        },
+        {
+          "claim_id": "item-027",
+          "gold": "contradicted",
+          "prediction": "insufficient"
+        },
+        {
+          "claim_id": "item-029",
+          "gold": "contradicted",
+          "prediction": "insufficient"
+        },
+        {
+          "claim_id": "item-031",
+          "gold": "contradicted",
+          "prediction": "insufficient"
+        },
+        {
+          "claim_id": "item-033",
+          "gold": "contradicted",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-035",
+          "gold": "contradicted",
+          "prediction": "insufficient"
+        }
+      ],
+      "rationale_overlap_on_correct_definitive": {
+        "matched": 10,
+        "n": 10
+      },
+      "quote_gate_failures": 0,
+      "accepted_quotes": 79
+    }
+  },
+  "initial_packet_retrieval": {
+    "ranked": {
+      "characters": 564567,
+      "annotated_pairs": 209,
+      "complete_rationales": 206
+    },
+    "packet": {
+      "characters": 497745,
+      "annotated_pairs": 209,
+      "complete_rationales": 209
+    }
+  }
+}

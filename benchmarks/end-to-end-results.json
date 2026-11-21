@@ -1,0 +1,64 @@
+{
+  "note": "Live prepare with full-text retrieval from arXiv, replayed offline with the frozen matcher. Two independent Claude subagents judged the claims with SKILL.md.",
+  "reference_statuses": {
+    "vaswani2017": {
+      "status": "verified",
+      "differences": []
+    },
+    "devlin2019": {
+      "status": "verified",
+      "differences": []
+    },
+    "he2016": {
+      "status": "verified",
+      "differences": []
+    },
+    "ioffe2015": {
+      "status": "verified",
+      "differences": []
+    },
+    "kingma2015": {
+      "status": "metadata_mismatch",
+      "differences": [
+        "venue"
+      ]
+    },
+    "kojima2022": {
+      "status": "verified",
+      "differences": []
+    },
+    "wei2022": {
+      "status": "verified",
+      "differences": []
+    },
+    "smith2023": {
+      "status": "not_found",
+      "differences": []
+    }
+  },
+  "sources": {
+    "devlin2019": "full_text from arXiv PDF",
+    "he2016": "full_text from arXiv PDF",
+    "ioffe2015": "full_text from arXiv PDF",
+    "kingma2015": "full_text from arXiv PDF",
+    "kojima2022": "full_text from arXiv PDF",
+    "vaswani2017": "full_text from arXiv PDF",
+    "wei2022": "full_text from arXiv PDF"
+  },
+  "runs": {
+    "run-A": {
+      "references_correct": 8,
+      "references": 8,
+      "claims_correct": 15,
+      "claims": 15,
+      "quote_validation_failures": 0
+    },
+    "run-B": {
+      "references_correct": 8,
+      "references": 8,
+      "claims_correct": 15,
+      "claims": 15,
+      "quote_validation_failures": 0
+    }
+  }
+}

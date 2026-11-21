@@ -1,0 +1,11 @@
+{
+  "name": "cite-checker",
+  "owner": { "name": "cite-checker maintainers" },
+  "plugins": [
+    {
+      "name": "cite-checker",
+      "source": "./",
+      "description": "Check references and the claims made about them before submission."
+    }
+  ]
+}

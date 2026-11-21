@@ -1,0 +1,142 @@
+{
+ "pipeline": "prepare --local-only, shard (8 pairs, top 3 passages), judge with claude -p --model haiku, finalize quote gate, escalate failed quotes and contradicted/partially_supported to claude -p --model sonnet, finalize",
+ "note": "The fresh sample was used to tighten the partially_supported rule in references/judging.md; the confirmation sample was not used for that change.",
+ "runs": {
+  "fresh/haiku": {
+   "n": 48,
+   "correct": 34,
+   "macro_f1": 0.7416690814256737,
+   "scores": {
+    "supported": {
+     "true_positive": 9,
+     "false_positive": 3,
+     "false_negative": 7,
+     "f1": 0.6428571428571429
+    },
+    "contradicted": {
+     "true_positive": 11,
+     "false_positive": 2,
+     "false_negative": 5,
+     "f1": 0.7586206896551724
+    },
+    "insufficient": {
+     "true_positive": 14,
+     "false_positive": 4,
+     "false_negative": 2,
+     "f1": 0.8235294117647058
+    }
+   },
+   "quote_gate_failures": 0,
+   "usage": {
+    "calls": 6,
+    "input_tokens_est": 24871,
+    "model_seconds": 108.0,
+    "output_tokens_est": 3622,
+    "runner": "claude -p --model haiku",
+    "usd_est": 0.0
+   }
+  },
+  "fresh/haiku+sonnet_escalation": {
+   "n": 48,
+   "correct": 33,
+   "macro_f1": 0.7268907563025211,
+   "scores": {
+    "supported": {
+     "true_positive": 9,
+     "false_positive": 3,
+     "false_negative": 7,
+     "f1": 0.6428571428571429
+    },
+    "contradicted": {
+     "true_positive": 10,
+     "false_positive": 2,
+     "false_negative": 6,
+     "f1": 0.7142857142857143
+    },
+    "insufficient": {
+     "true_positive": 14,
+     "false_positive": 4,
+     "false_negative": 2,
+     "f1": 0.8235294117647058
+    }
+   },
+   "quote_gate_failures": 0,
+   "usage": {
+    "calls": 3,
+    "input_tokens_est": 10982,
+    "model_seconds": 29.7,
+    "output_tokens_est": 1541,
+    "runner": "claude -p --model sonnet",
+    "usd_est": 0.0
+   }
+  },
+  "confirmation/haiku": {
+   "n": 36,
+   "correct": 30,
+   "macro_f1": 0.9075851684547337,
+   "scores": {
+    "supported": {
+     "true_positive": 10,
+     "false_positive": 0,
+     "false_negative": 2,
+     "f1": 0.9090909090909091
+    },
+    "contradicted": {
+     "true_positive": 11,
+     "false_positive": 0,
+     "false_negative": 1,
+     "f1": 0.9565217391304348
+    },
+    "insufficient": {
+     "true_positive": 9,
+     "false_positive": 0,
+     "false_negative": 3,
+     "f1": 0.8571428571428571
+    }
+   },
+   "quote_gate_failures": 0,
+   "usage": {
+    "calls": 5,
+    "input_tokens_est": 18604,
+    "model_seconds": 96.6,
+    "output_tokens_est": 3025,
+    "runner": "claude -p --model haiku",
+    "usd_est": 0.0
+   }
+  },
+  "confirmation/haiku+sonnet_escalation": {
+   "n": 36,
+   "correct": 31,
+   "macro_f1": 0.924901185770751,
+   "scores": {
+    "supported": {
+     "true_positive": 11,
+     "false_positive": 0,
+     "false_negative": 1,
+     "f1": 0.9565217391304348
+    },
+    "contradicted": {
+     "true_positive": 10,
+     "false_positive": 0,
+     "false_negative": 2,
+     "f1": 0.9090909090909091
+    },
+    "insufficient": {
+     "true_positive": 10,
+     "false_positive": 0,
+     "false_negative": 2,
+     "f1": 0.9090909090909091
+    }
+   },
+   "quote_gate_failures": 0,
+   "usage": {
+    "calls": 3,
+    "input_tokens_est": 9924,
+    "model_seconds": 28.1,
+    "output_tokens_est": 1515,
+    "runner": "claude -p --model sonnet",
+    "usd_est": 0.0
+   }
+  }
+ }
+}

@@ -1,0 +1,633 @@
+{
+  "sample": {
+    "fresh": "48 pairs, 16 per label, hash-selected with seed claude-fresh-v1 from SciFact dev pairs sharing no claim or cited document with the dev, holdout, or confirmation samples",
+    "confirmation": "the 36-pair confirmation sample used for the Codex comparison"
+  },
+  "runs": {
+    "conf-I1": {
+      "set": "confirmation",
+      "condition": "rewritten_verdict_rules",
+      "repeat": 1,
+      "n": 36,
+      "correct": 33,
+      "macro_f1": 0.9162781662781664,
+      "scores": {
+        "supported": {
+          "true_positive": 12,
+          "false_positive": 2,
+          "false_negative": 0,
+          "f1": 0.9230769230769231
+        },
+        "contradicted": {
+          "true_positive": 11,
+          "false_positive": 1,
+          "false_negative": 1,
+          "f1": 0.9166666666666666
+        },
+        "insufficient": {
+          "true_positive": 10,
+          "false_positive": 0,
+          "false_negative": 2,
+          "f1": 0.9090909090909091
+        }
+      },
+      "wrong": [
+        {
+          "claim_id": "item-015",
+          "gold": "insufficient",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-018",
+          "gold": "insufficient",
+          "prediction": "supported"
+        },
+        {
+          "claim_id": "item-033",
+          "gold": "contradicted",
+          "prediction": "supported"
+        }
+      ],
+      "rationale_overlap_on_correct_definitive": {
+        "matched": 23,
+        "n": 23
+      },
+      "quote_gate_failures": 0
+    },
+    "conf-U1": {
+      "set": "confirmation",
+      "condition": "unguided",
+      "repeat": 1,
+      "n": 36,
+      "correct": 30,
+      "macro_f1": 0.8943001443001443,
+      "scores": {
+        "supported": {
+          "true_positive": 10,
+          "false_positive": 0,
+          "false_negative": 2,
+          "f1": 0.9090909090909091
+        },
+        "contradicted": {
+          "true_positive": 11,
+          "false_positive": 1,
+          "false_negative": 1,
+          "f1": 0.9166666666666666
+        },
+        "insufficient": {
+          "true_positive": 9,
+          "false_positive": 0,
+          "false_negative": 3,
+          "f1": 0.8571428571428571
+        }
+      },
+      "wrong": [
+        {
+          "claim_id": "item-012",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-013",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-017",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-018",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-019",
+          "gold": "insufficient",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-033",
+          "gold": "contradicted",
+          "prediction": "partially_supported"
+        }
+      ],
+      "rationale_overlap_on_correct_definitive": {
+        "matched": 0,
+        "n": 21
+      },
+      "quote_gate_failures": 0
+    },
+    "fresh-I1": {
+      "set": "fresh",
+      "condition": "rewritten_verdict_rules",
+      "repeat": 1,
+      "n": 48,
+      "correct": 39,
+      "macro_f1": 0.8034920634920635,
+      "scores": {
+        "supported": {
+          "true_positive": 15,
+          "false_positive": 5,
+          "false_negative": 1,
+          "f1": 0.8333333333333334
+        },
+        "contradicted": {
+          "true_positive": 15,
+          "false_positive": 4,
+          "false_negative": 1,
+          "f1": 0.8571428571428571
+        },
+        "insufficient": {
+          "true_positive": 9,
+          "false_positive": 0,
+          "false_negative": 7,
+          "f1": 0.72
+        }
+      },
+      "wrong": [
+        {
+          "claim_id": "item-004",
+          "gold": "insufficient",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-005",
+          "gold": "insufficient",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-015",
+          "gold": "insufficient",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-018",
+          "gold": "insufficient",
+          "prediction": "supported"
+        },
+        {
+          "claim_id": "item-025",
+          "gold": "insufficient",
+          "prediction": "supported"
+        },
+        {
+          "claim_id": "item-030",
+          "gold": "insufficient",
+          "prediction": "supported"
+        },
+        {
+          "claim_id": "item-031",
+          "gold": "insufficient",
+          "prediction": "supported"
+        },
+        {
+          "claim_id": "item-033",
+          "gold": "supported",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-044",
+          "gold": "contradicted",
+          "prediction": "supported"
+        }
+      ],
+      "rationale_overlap_on_correct_definitive": {
+        "matched": 23,
+        "n": 30
+      },
+      "quote_gate_failures": 0
+    },
+    "fresh-I2": {
+      "set": "fresh",
+      "condition": "rewritten_verdict_rules",
+      "repeat": 2,
+      "n": 48,
+      "correct": 38,
+      "macro_f1": 0.8047508047508046,
+      "scores": {
+        "supported": {
+          "true_positive": 13,
+          "false_positive": 4,
+          "false_negative": 3,
+          "f1": 0.7878787878787878
+        },
+        "contradicted": {
+          "true_positive": 15,
+          "false_positive": 4,
+          "false_negative": 1,
+          "f1": 0.8571428571428571
+        },
+        "insufficient": {
+          "true_positive": 10,
+          "false_positive": 0,
+          "false_negative": 6,
+          "f1": 0.7692307692307693
+        }
+      },
+      "wrong": [
+        {
+          "claim_id": "item-004",
+          "gold": "insufficient",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-005",
+          "gold": "insufficient",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-008",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-015",
+          "gold": "insufficient",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-018",
+          "gold": "insufficient",
+          "prediction": "supported"
+        },
+        {
+          "claim_id": "item-019",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-025",
+          "gold": "insufficient",
+          "prediction": "supported"
+        },
+        {
+          "claim_id": "item-030",
+          "gold": "insufficient",
+          "prediction": "supported"
+        },
+        {
+          "claim_id": "item-033",
+          "gold": "supported",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-044",
+          "gold": "contradicted",
+          "prediction": "supported"
+        }
+      ],
+      "rationale_overlap_on_correct_definitive": {
+        "matched": 24,
+        "n": 28
+      },
+      "quote_gate_failures": 0
+    },
+    "fresh-O1": {
+      "set": "fresh",
+      "condition": "release_skill",
+      "repeat": 1,
+      "n": 48,
+      "correct": 37,
+      "macro_f1": 0.8171945701357467,
+      "scores": {
+        "supported": {
+          "true_positive": 12,
+          "false_positive": 2,
+          "false_negative": 4,
+          "f1": 0.8
+        },
+        "contradicted": {
+          "true_positive": 15,
+          "false_positive": 3,
+          "false_negative": 1,
+          "f1": 0.8823529411764706
+        },
+        "insufficient": {
+          "true_positive": 10,
+          "false_positive": 0,
+          "false_negative": 6,
+          "f1": 0.7692307692307693
+        }
+      },
+      "wrong": [
+        {
+          "claim_id": "item-004",
+          "gold": "insufficient",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-008",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-015",
+          "gold": "insufficient",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-016",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-018",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-019",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-025",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-030",
+          "gold": "insufficient",
+          "prediction": "supported"
+        },
+        {
+          "claim_id": "item-031",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-033",
+          "gold": "supported",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-044",
+          "gold": "contradicted",
+          "prediction": "supported"
+        }
+      ],
+      "rationale_overlap_on_correct_definitive": {
+        "matched": 21,
+        "n": 27
+      },
+      "quote_gate_failures": 0
+    },
+    "fresh-O2": {
+      "set": "fresh",
+      "condition": "release_skill",
+      "repeat": 2,
+      "n": 48,
+      "correct": 39,
+      "macro_f1": 0.8546114742193174,
+      "scores": {
+        "supported": {
+          "true_positive": 13,
+          "false_positive": 1,
+          "false_negative": 3,
+          "f1": 0.8666666666666667
+        },
+        "contradicted": {
+          "true_positive": 15,
+          "false_positive": 3,
+          "false_negative": 1,
+          "f1": 0.8823529411764706
+        },
+        "insufficient": {
+          "true_positive": 11,
+          "false_positive": 0,
+          "false_negative": 5,
+          "f1": 0.8148148148148148
+        }
+      },
+      "wrong": [
+        {
+          "claim_id": "item-004",
+          "gold": "insufficient",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-008",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-015",
+          "gold": "insufficient",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-018",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-019",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-025",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-030",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-033",
+          "gold": "supported",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-044",
+          "gold": "contradicted",
+          "prediction": "supported"
+        }
+      ],
+      "rationale_overlap_on_correct_definitive": {
+        "matched": 22,
+        "n": 28
+      },
+      "quote_gate_failures": 0
+    },
+    "fresh-U1": {
+      "set": "fresh",
+      "condition": "unguided",
+      "repeat": 1,
+      "n": 48,
+      "correct": 38,
+      "macro_f1": 0.8300977959421982,
+      "scores": {
+        "supported": {
+          "true_positive": 13,
+          "false_positive": 2,
+          "false_negative": 3,
+          "f1": 0.8387096774193549
+        },
+        "contradicted": {
+          "true_positive": 15,
+          "false_positive": 3,
+          "false_negative": 1,
+          "f1": 0.8823529411764706
+        },
+        "insufficient": {
+          "true_positive": 10,
+          "false_positive": 0,
+          "false_negative": 6,
+          "f1": 0.7692307692307693
+        }
+      },
+      "wrong": [
+        {
+          "claim_id": "item-004",
+          "gold": "insufficient",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-008",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-015",
+          "gold": "insufficient",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-018",
+          "gold": "insufficient",
+          "prediction": "supported"
+        },
+        {
+          "claim_id": "item-019",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-025",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-030",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-031",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-033",
+          "gold": "supported",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-044",
+          "gold": "contradicted",
+          "prediction": "supported"
+        }
+      ],
+      "rationale_overlap_on_correct_definitive": {
+        "matched": 0,
+        "n": 28
+      },
+      "quote_gate_failures": 0
+    },
+    "fresh-U2": {
+      "set": "fresh",
+      "condition": "unguided",
+      "repeat": 2,
+      "n": 48,
+      "correct": 38,
+      "macro_f1": 0.8300977959421982,
+      "scores": {
+        "supported": {
+          "true_positive": 13,
+          "false_positive": 2,
+          "false_negative": 3,
+          "f1": 0.8387096774193549
+        },
+        "contradicted": {
+          "true_positive": 15,
+          "false_positive": 3,
+          "false_negative": 1,
+          "f1": 0.8823529411764706
+        },
+        "insufficient": {
+          "true_positive": 10,
+          "false_positive": 0,
+          "false_negative": 6,
+          "f1": 0.7692307692307693
+        }
+      },
+      "wrong": [
+        {
+          "claim_id": "item-004",
+          "gold": "insufficient",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-008",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-015",
+          "gold": "insufficient",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-018",
+          "gold": "insufficient",
+          "prediction": "supported"
+        },
+        {
+          "claim_id": "item-019",
+          "gold": "supported",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-025",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-030",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-031",
+          "gold": "insufficient",
+          "prediction": "partially_supported"
+        },
+        {
+          "claim_id": "item-033",
+          "gold": "supported",
+          "prediction": "contradicted"
+        },
+        {
+          "claim_id": "item-044",
+          "gold": "contradicted",
+          "prediction": "supported"
+        }
+      ],
+      "rationale_overlap_on_correct_definitive": {
+        "matched": 0,
+        "n": 28
+      },
+      "quote_gate_failures": 0
+    }
+  },
+  "label_disagreements_all_runs": {
+    "item-004": "gold insufficient; abstract says Scribble depletion promotes transformation, the reverse of the claim",
+    "item-033": "gold supported; abstract says heart failure incidence did not change over time among men or women",
+    "item-044": "gold contradicted; abstract concludes most lincRNAs do not function through encoded proteins, as claimed"
+  }
+}

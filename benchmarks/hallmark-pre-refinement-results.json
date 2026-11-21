@@ -1,0 +1,1275 @@
+{
+  "coverage": {
+    "Crossref": {
+      "responses": {
+        "200": 45,
+        "404": 5
+      },
+      "rows_attempted": 46,
+      "rows_completed": 46
+    },
+    "OpenAlex": {
+      "responses": {
+        "200": 32,
+        "404": 4
+      },
+      "rows_attempted": 32,
+      "rows_completed": 32
+    },
+    "rows_with_no_completed_source": 0
+  },
+  "doi_only_outcomes": {
+    "no_doi": 27,
+    "not_found": 5,
+    "resolves": 14
+  },
+  "fixture_rows": 831,
+  "fixture_sha256": "e42ef2cbe2b5550768c191f0526d9c75935adda5fd630dba8724e479975907d1",
+  "historical_sha256": "cc1fe78c75093602c2d077f22f39a07c3db7a9fe62d6fbc526ba6f6841c0c397",
+  "historical_unverifiable": 0,
+  "matcher_sha256": {
+    "bibliography.py": "2134967c06423e9c382b43e7ec4fcf07cb5b95503e07a12944ebe84b2a2d5dad",
+    "sources.py": "d068e20b96cdce28f98fb0764c32bd5869f56a3e1385a8aff6a639b2872e4089"
+  },
+  "mode": "keyless with cache",
+  "recorded_utc": "2026-11-21T04:58:13+00:00",
+  "rows": [
+    {
+      "attempts": [
+        {
+          "http_status": 404,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "http_status": 404,
+          "index": "OpenAlex",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "0cb3d1006ca1",
+      "difficulty_tier": 3,
+      "doi_only": "not_found",
+      "hallucination_type": "near_miss_title",
+      "historical_flag": "clean",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [
+        "title"
+      ],
+      "status": "metadata_mismatch"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "a80e0803bdbf",
+      "difficulty_tier": 1,
+      "doi_only": "no_doi",
+      "hallucination_type": "future_date",
+      "historical_flag": "reference_metadata_mismatch",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [
+        "year"
+      ],
+      "status": "metadata_mismatch"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        }
+      ],
+      "bibtex_key": "ab00a3ca7bd7",
+      "difficulty_tier": null,
+      "doi_only": "resolves",
+      "hallucination_type": null,
+      "historical_flag": "clean",
+      "label": "VALID",
+      "looked_up": [
+        "Crossref"
+      ],
+      "mismatch_fields": [],
+      "status": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        }
+      ],
+      "bibtex_key": "ae211b7967b1",
+      "difficulty_tier": null,
+      "doi_only": "resolves",
+      "hallucination_type": null,
+      "historical_flag": "clean",
+      "label": "VALID",
+      "looked_up": [
+        "Crossref"
+      ],
+      "mismatch_fields": [],
+      "status": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "b3149e89f243",
+      "difficulty_tier": 3,
+      "doi_only": "no_doi",
+      "hallucination_type": "plausible_fabrication",
+      "historical_flag": "reference_not_found",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "ambiguous"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "b3a18dc442ea",
+      "difficulty_tier": null,
+      "doi_only": "no_doi",
+      "hallucination_type": null,
+      "historical_flag": "reference_metadata_mismatch",
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [
+        "year"
+      ],
+      "status": "metadata_mismatch"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "b415e97f34b5",
+      "difficulty_tier": null,
+      "doi_only": "no_doi",
+      "hallucination_type": null,
+      "historical_flag": "clean",
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        }
+      ],
+      "bibtex_key": "b624a948924d",
+      "difficulty_tier": 3,
+      "doi_only": "resolves",
+      "hallucination_type": "near_miss_title",
+      "historical_flag": "reference_metadata_mismatch",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref"
+      ],
+      "mismatch_fields": [
+        "title"
+      ],
+      "status": "metadata_mismatch"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 404,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "exact"
+        }
+      ],
+      "bibtex_key": "b9ce7ba367a4",
+      "difficulty_tier": null,
+      "doi_only": "not_found",
+      "hallucination_type": null,
+      "historical_flag": "clean",
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "b9fb0d79989c",
+      "difficulty_tier": 3,
+      "doi_only": "no_doi",
+      "hallucination_type": "plausible_fabrication",
+      "historical_flag": "reference_not_found",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "not_found"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "ba0e690d508b",
+      "difficulty_tier": null,
+      "doi_only": "no_doi",
+      "hallucination_type": null,
+      "historical_flag": "clean",
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "metadata_unconfirmed"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        }
+      ],
+      "bibtex_key": "ba6218295920",
+      "difficulty_tier": 2,
+      "doi_only": "resolves",
+      "hallucination_type": "swapped_authors",
+      "historical_flag": "reference_metadata_mismatch",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref"
+      ],
+      "mismatch_fields": [
+        "authors"
+      ],
+      "status": "metadata_mismatch"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "bca7690b37ea",
+      "difficulty_tier": 1,
+      "doi_only": "no_doi",
+      "hallucination_type": "placeholder_authors",
+      "historical_flag": "reference_not_found",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [
+        "authors",
+        "year"
+      ],
+      "status": "metadata_mismatch"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        }
+      ],
+      "bibtex_key": "bf4e68e80553",
+      "difficulty_tier": null,
+      "doi_only": "resolves",
+      "hallucination_type": null,
+      "historical_flag": "clean",
+      "label": "VALID",
+      "looked_up": [
+        "Crossref"
+      ],
+      "mismatch_fields": [],
+      "status": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "c04c91eb971d",
+      "difficulty_tier": 3,
+      "doi_only": "no_doi",
+      "hallucination_type": "plausible_fabrication",
+      "historical_flag": "reference_not_found",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "ambiguous"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "c1ab2b788cf6",
+      "difficulty_tier": 3,
+      "doi_only": "no_doi",
+      "hallucination_type": "plausible_fabrication",
+      "historical_flag": "reference_not_found",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "not_found"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        }
+      ],
+      "bibtex_key": "c3a5614896bf",
+      "difficulty_tier": 2,
+      "doi_only": "resolves",
+      "hallucination_type": "swapped_authors",
+      "historical_flag": "reference_metadata_mismatch",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref"
+      ],
+      "mismatch_fields": [
+        "title",
+        "authors",
+        "year"
+      ],
+      "status": "metadata_mismatch"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "c3fef965ad7c",
+      "difficulty_tier": 1,
+      "doi_only": "no_doi",
+      "hallucination_type": "nonexistent_venue",
+      "historical_flag": "clean",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "metadata_unconfirmed"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "c65d6703973e",
+      "difficulty_tier": null,
+      "doi_only": "no_doi",
+      "hallucination_type": null,
+      "historical_flag": "clean",
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "metadata_unconfirmed"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "c75f548a1b50",
+      "difficulty_tier": 1,
+      "doi_only": "no_doi",
+      "hallucination_type": "placeholder_authors",
+      "historical_flag": "reference_not_found",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [
+        "authors",
+        "year"
+      ],
+      "status": "metadata_mismatch"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "c89033e923da",
+      "difficulty_tier": null,
+      "doi_only": "no_doi",
+      "hallucination_type": null,
+      "historical_flag": "clean",
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "ce020c7b6d9b",
+      "difficulty_tier": 2,
+      "doi_only": "no_doi",
+      "hallucination_type": "chimeric_title",
+      "historical_flag": "reference_not_found",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "ambiguous"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "d0f7607f19f7",
+      "difficulty_tier": 1,
+      "doi_only": "no_doi",
+      "hallucination_type": "future_date",
+      "historical_flag": "reference_not_found",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "not_found"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "d30ce2d56d4a",
+      "difficulty_tier": 3,
+      "doi_only": "no_doi",
+      "hallucination_type": "near_miss_title",
+      "historical_flag": "reference_metadata_mismatch",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "not_found"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "d474b867b167",
+      "difficulty_tier": 2,
+      "doi_only": "no_doi",
+      "hallucination_type": "preprint_as_published",
+      "historical_flag": "clean",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "metadata_unconfirmed"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        }
+      ],
+      "bibtex_key": "d517a3638c87",
+      "difficulty_tier": 2,
+      "doi_only": "resolves",
+      "hallucination_type": "hybrid_fabrication",
+      "historical_flag": "reference_metadata_mismatch",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref"
+      ],
+      "mismatch_fields": [
+        "authors"
+      ],
+      "status": "metadata_mismatch"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "d68d35055930",
+      "difficulty_tier": null,
+      "doi_only": "no_doi",
+      "hallucination_type": null,
+      "historical_flag": "clean",
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "metadata_unconfirmed"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "db0f3122fafb",
+      "difficulty_tier": null,
+      "doi_only": "no_doi",
+      "hallucination_type": null,
+      "historical_flag": "clean",
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 404,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "http_status": 404,
+          "index": "OpenAlex",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "dcea07e8bbc1",
+      "difficulty_tier": 1,
+      "doi_only": "not_found",
+      "hallucination_type": "placeholder_authors",
+      "historical_flag": "reference_metadata_mismatch",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [
+        "authors"
+      ],
+      "status": "metadata_mismatch"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "e02f60d1fcfb",
+      "difficulty_tier": null,
+      "doi_only": "no_doi",
+      "hallucination_type": null,
+      "historical_flag": "clean",
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        }
+      ],
+      "bibtex_key": "e15958996e7a",
+      "difficulty_tier": null,
+      "doi_only": "resolves",
+      "hallucination_type": null,
+      "historical_flag": "clean",
+      "label": "VALID",
+      "looked_up": [
+        "Crossref"
+      ],
+      "mismatch_fields": [],
+      "status": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        }
+      ],
+      "bibtex_key": "e65a9f529e01",
+      "difficulty_tier": 2,
+      "doi_only": "resolves",
+      "hallucination_type": "hybrid_fabrication",
+      "historical_flag": "reference_metadata_mismatch",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref"
+      ],
+      "mismatch_fields": [
+        "title",
+        "authors"
+      ],
+      "status": "metadata_mismatch"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "e696b1316100",
+      "difficulty_tier": 2,
+      "doi_only": "no_doi",
+      "hallucination_type": "wrong_venue",
+      "historical_flag": "clean",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "metadata_unconfirmed"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "e74e121565e4",
+      "difficulty_tier": 2,
+      "doi_only": "no_doi",
+      "hallucination_type": "wrong_venue",
+      "historical_flag": "reference_metadata_mismatch",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [
+        "venue"
+      ],
+      "status": "metadata_mismatch"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        }
+      ],
+      "bibtex_key": "e9bc60a27a4f",
+      "difficulty_tier": 3,
+      "doi_only": "resolves",
+      "hallucination_type": "near_miss_title",
+      "historical_flag": "clean",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref"
+      ],
+      "mismatch_fields": [],
+      "status": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 404,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "http_status": 404,
+          "index": "OpenAlex",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "ea4470612c9a",
+      "difficulty_tier": null,
+      "doi_only": "not_found",
+      "hallucination_type": null,
+      "historical_flag": "clean",
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "metadata_unconfirmed"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        }
+      ],
+      "bibtex_key": "ebeefa5dcc58",
+      "difficulty_tier": null,
+      "doi_only": "resolves",
+      "hallucination_type": null,
+      "historical_flag": "clean",
+      "label": "VALID",
+      "looked_up": [
+        "Crossref"
+      ],
+      "mismatch_fields": [],
+      "status": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "ebf3a4b200cc",
+      "difficulty_tier": 3,
+      "doi_only": "no_doi",
+      "hallucination_type": "plausible_fabrication",
+      "historical_flag": "reference_not_found",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "not_found"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "efbda82965cc",
+      "difficulty_tier": 1,
+      "doi_only": "no_doi",
+      "hallucination_type": "future_date",
+      "historical_flag": "reference_metadata_mismatch",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [
+        "year"
+      ],
+      "status": "metadata_mismatch"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        }
+      ],
+      "bibtex_key": "f2cdce2bf1e3",
+      "difficulty_tier": null,
+      "doi_only": "resolves",
+      "hallucination_type": null,
+      "historical_flag": "clean",
+      "label": "VALID",
+      "looked_up": [
+        "Crossref"
+      ],
+      "mismatch_fields": [],
+      "status": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "f3d009a06638",
+      "difficulty_tier": 3,
+      "doi_only": "no_doi",
+      "hallucination_type": "plausible_fabrication",
+      "historical_flag": "reference_not_found",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "not_found"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "f4281bf63d87",
+      "difficulty_tier": 1,
+      "doi_only": "no_doi",
+      "hallucination_type": "nonexistent_venue",
+      "historical_flag": "clean",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [
+        "venue"
+      ],
+      "status": "metadata_mismatch"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        }
+      ],
+      "bibtex_key": "f460a8ad866f",
+      "difficulty_tier": 1,
+      "doi_only": "resolves",
+      "hallucination_type": "future_date",
+      "historical_flag": "reference_metadata_mismatch",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref"
+      ],
+      "mismatch_fields": [
+        "year"
+      ],
+      "status": "metadata_mismatch"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        }
+      ],
+      "bibtex_key": "f81aa3e8dc75",
+      "difficulty_tier": 2,
+      "doi_only": "resolves",
+      "hallucination_type": "partial_author_list",
+      "historical_flag": "reference_metadata_mismatch",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref"
+      ],
+      "mismatch_fields": [],
+      "status": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "fc49c094b9c1",
+      "difficulty_tier": 2,
+      "doi_only": "no_doi",
+      "hallucination_type": "chimeric_title",
+      "historical_flag": "reference_not_found",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [],
+      "status": "not_found"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 404,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "http_status": 404,
+          "index": "OpenAlex",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        }
+      ],
+      "bibtex_key": "fcd7d29730d8",
+      "difficulty_tier": 1,
+      "doi_only": "not_found",
+      "hallucination_type": "fabricated_doi",
+      "historical_flag": "reference_not_found",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex"
+      ],
+      "mismatch_fields": [
+        "doi",
+        "year"
+      ],
+      "status": "metadata_mismatch"
+    }
+  ],
+  "sample": {
+    "hallucinated_per_tier": 10,
+    "rows": 46,
+    "seed": "cite-checker-hallmark-v1",
+    "split": "initial",
+    "valid": 16
+  },
+  "scores": {
+    "crossref_doi_only": {
+      "fn": 27,
+      "fp": 2,
+      "tn": 14,
+      "tp": 3
+    },
+    "historical": {
+      "fn": 6,
+      "fp": 1,
+      "tn": 15,
+      "tp": 24
+    },
+    "strict": {
+      "fn": 8,
+      "fp": 1,
+      "tn": 15,
+      "tp": 22
+    },
+    "triage": {
+      "fn": 2,
+      "fp": 5,
+      "tn": 11,
+      "tp": 28
+    }
+  },
+  "status_by_label": {
+    "HALLUCINATED": {
+      "ambiguous": 3,
+      "metadata_mismatch": 15,
+      "metadata_unconfirmed": 3,
+      "not_found": 7,
+      "verified": 2
+    },
+    "VALID": {
+      "metadata_mismatch": 1,
+      "metadata_unconfirmed": 4,
+      "verified": 11
+    }
+  }
+}

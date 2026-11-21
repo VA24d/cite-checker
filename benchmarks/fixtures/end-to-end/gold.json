@@ -1,0 +1,29 @@
+{
+  "references": {
+    "vaswani2017": "valid",
+    "devlin2019": "valid",
+    "he2016": "valid",
+    "ioffe2015": "valid",
+    "kingma2015": "wrong_venue",
+    "kojima2022": "valid",
+    "wei2022": "valid",
+    "smith2023": "fabricated"
+  },
+  "claims": {
+    "claim-1": "supported",
+    "claim-2": "contradicted",
+    "claim-3": "supported",
+    "claim-4": "contradicted",
+    "claim-5": "supported",
+    "claim-6": "insufficient",
+    "claim-7": "insufficient",
+    "claim-8": "supported",
+    "claim-9": "contradicted",
+    "claim-10": "supported",
+    "claim-11": "supported",
+    "claim-12": "contradicted",
+    "claim-13": "supported",
+    "claim-14": "contradicted",
+    "claim-15": "insufficient"
+  }
+}
