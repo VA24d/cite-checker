@@ -158,6 +158,52 @@ Each run used `prepare --local-only`, then `shard` (8 pairs per shard, top 3 pas
 
 Macro F1, with correct counts in brackets. No quote failed validation. On the confirmation sample the first pass sent about 18,600 input tokens to Haiku and the escalation sent about 9,900 to Sonnet, estimated at four characters per token from `meter-*.json`. On the harder fresh sample the cheap pipeline trails the version 1 runs, where a stronger model read the whole packet; escalation did not recover it. Of the 15 fresh-sample errors, 5 are supported claims both models called `partially_supported` (SciFact has no partial label) and 4 are `insufficient` calls, which are not escalated. Results: `scifact-v3-shards-results.json`.
 
+## Version 2.1: batched lookups, quorum rule, Opus escalation
+
+### Speed
+
+| Step | Version 1 | Version 2.1 |
+|---|---:|---:|
+| HALLMARK sample, 46 references, live | 172-233 s | 22-74 s |
+| End-to-end fixture `prepare`, empty cache | 38 s | 14-20 s |
+| End-to-end fixture `prepare`, warm shared cache | 38 s (no shared cache) | 5 s |
+
+Semantic Scholar records for every reference with a DOI or arXiv ID now come from one batch request, and arXiv records from one `id_list` request. On the end-to-end fixture that cut Semantic Scholar calls from 8 to 2 and arXiv API calls from 7 to 1. The remaining time is mostly downloading full texts from arxiv.org. Part of the HALLMARK speed-up on `fresh1` to `fresh4` comes from OpenAlex answering HTTP 429 at once, because its keyless daily budget was spent during these runs.
+
+### HALLMARK
+
+Eight disjoint samples of 46 rows (30 corrupted, 16 valid). `fresh1` and `fresh2` were scored first and then used to fix three rules: author lists cut to a first and last author were missed, name variants such as "Kui Ren" and "Kui Rent" were flagged, and one valid paper became phantom while OpenAlex and Semantic Scholar were rate-limited. `fresh3` and `fresh4` were scored once, after every change. Scores below replay the captured responses with the final code (`--indices crossref openalex semanticscholar arxiv`).
+
+| Sample | Strict F1 | Errors | Version 1 strict F1 |
+|---|---:|---|---:|
+| Initial | 0.984 | 1 valid flagged (year, venue) | 0.984 |
+| Holdout | 0.983 | 1 invented venue unconfirmed | 0.966 |
+| Confirmation | 0.984 | 1 valid flagged (year) | 0.931 |
+| Final | 0.983 | 1 invented venue unconfirmed | 0.983 |
+| fresh1 | 0.983 | 1 hybrid fabrication ambiguous | 0.949 (first scoring) |
+| fresh2 | 0.966 | 2 near-miss titles that differ from the real title only by a hyphen | 0.842 (first scoring) |
+| fresh3 (unseen) | **1.000** | none | |
+| fresh4 (unseen) | **0.951** | 1 wrong venue unconfirmed, 2 valid flagged (authors, year) | |
+
+Across all 368 rows the strict label is right for 358 (97.3%). OpenAlex returned HTTP 429 for 22 to 30 rows of each fresh sample, so those rows were judged on Crossref, Semantic Scholar and arXiv only. "Not found" now needs two indexes to have answered, so an outage gives `lookup_unavailable` and not a false phantom. Of the 128 valid rows, 118 were verified, 4 unconfirmed, 2 sent to review and 4 flagged as metadata errors. None was labelled phantom or chimeric. Results: `hallmark-2.1-*.json`.
+
+The remaining misses need data the free indexes do not hold: a register of real venue names (DBLP blocks scripted access), and title differences of one hyphen, which BibTeX entries also drop from valid titles.
+
+### SciFact
+
+The judging rules changed in two ways. A scope gap (another species, cohort or condition) goes into a `caveat` field and no longer turns `supported` into `partially_supported`. A source stating the opposite of the main finding is `contradicted`. Escalation now also covers `insufficient` calls on claims that state a number, direction or negation, and escalated pairs go to Opus. Errors from the version 2 fresh and confirmation runs were read while writing these rules; dev and holdout were not.
+
+| Sample | Haiku | Haiku, then Opus on escalated pairs | Escalated | Version 2 (Haiku, then Sonnet) |
+|---|---:|---:|---:|---:|
+| Dev (18) | 0.836 (15/18) | 0.836 (15/18) | 9 | |
+| Holdout (24) | 0.782 (18/24) | 0.872 (21/24) | 17 | |
+| Confirmation (36) | 0.957 (33/36) | 0.958 (34/36) | 18 | 0.925 |
+| Fresh (48) | 0.795 (37/48) | 0.875 (42/48) | 29 | 0.727 |
+
+Macro F1, with correct counts in brackets: 112 of 126 overall (89%). No quote failed validation. Opus read about 43,000 input tokens across the four samples, and Haiku about 69,000.
+
+About half of the 14 remaining errors are cases where the abstract appears to settle the claim differently from the SciFact label. The source says IFN-gamma-deficient mice "developed fatal autoimmune myocarditis" for a claim that they are resistant (label: not enough information). It says Scribble loss promotes tumorigenesis for a claim that it prevents it (label: not enough information). It says heart failure incidence did not change for a claim of a 10% fall (label: supported). The others are inferences the models declined to make, such as reading a non-comparative abstract as contradicting a comparative claim. Results: `scifact-2.1-shards-results.json`.
+
 ## Closed-book stress test
 
 A nine-claim fixture covers ten claim–source pairs. It includes a reversed effect, an incompatible denominator, a missing source, an uncollected endpoint, a nonsignificant result cited as equivalence, two sources on one claim, and an instruction embedded in source text. Codex audited all ten pairs. Separate deterministic tests reject wrong-source quotes, altered text, stitched quotes, wrong offsets, changed digests, and stale assessments.

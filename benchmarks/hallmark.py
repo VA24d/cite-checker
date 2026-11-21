@@ -29,11 +29,21 @@ from urllib.parse import quote
 SKILL_DIR = Path(__file__).resolve().parents[1] / "skills" / "cite-checker"
 sys.path.insert(0, str(SKILL_DIR))
 from scripts.bibliography import reference  # noqa: E402
-from scripts.sources import CROSSREF, Transport, classify, lookup  # noqa: E402
+from concurrent.futures import ThreadPoolExecutor  # noqa: E402
+
+from scripts.sources import (  # noqa: E402
+    CROSSREF,
+    Transport,
+    classify,
+    lookup,
+    prefetch_semantic,
+)
 
 FIXTURE_SHA256 = "e42ef2cbe2b5550768c191f0526d9c75935adda5fd630dba8724e479975907d1"
 SEED = "cite-checker-hallmark-v1"
-SPLITS = ("initial", "holdout", "confirmation", "final")
+# fresh1 and fresh2 were added for version 2 and then used to fix author and quorum rules;
+# fresh3 and fresh4 were scored once, after every change.
+SPLITS = ("initial", "holdout", "confirmation", "final", "fresh1", "fresh2", "fresh3", "fresh4")
 SAMPLE_SIZE = {
     ("VALID", None): 16,
     ("HALLUCINATED", 1): 10,
@@ -124,11 +134,14 @@ def main():
         for name in ("bibliography.py", "sources.py")
     }
     transport = Transport(args.cache, offline=args.offline)
-    measured = []
-    for number, key in enumerate(selected, 1):
-        ref = reference({**fields[key], "id": key})
+    refs = {key: reference({**fields[key], "id": key}) for key in selected}
+    if "semanticscholar" in args.indices:
+        prefetch_semantic(list(refs.values()), transport)
+
+    def measure(key):
+        ref = refs[key]
         resolution, _ = lookup(ref, transport, args.indices)
-        measured.append(
+        return (
             {
                 "bibtex_key": key,
                 "status": resolution["status"],
@@ -141,8 +154,10 @@ def main():
                 "looked_up": resolution["looked_up"],
             }
         )
-        if number % 10 == 0 or number == len(selected):
-            print(f"Checked {number}/{len(selected)} references", file=sys.stderr)
+
+    with ThreadPoolExecutor(max_workers=1 if args.offline else 8) as pool:
+        measured = list(pool.map(measure, selected))
+    print(f"Checked {len(measured)} references", file=sys.stderr)
 
     # Join gold labels only after all matcher and DOI predictions are recorded.
     for row in measured:

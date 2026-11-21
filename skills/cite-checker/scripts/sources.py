@@ -2,6 +2,7 @@
 
 import hashlib
 import html
+import http.client
 import ipaddress
 import json
 import os
@@ -28,6 +29,7 @@ ARXIV = "https://export.arxiv.org/api/query"
 EUROPE = "https://www.ebi.ac.uk/europepmc/webservices/rest"
 SEMANTIC = "https://api.semanticscholar.org/graph/v1/paper/search/match"
 SEMANTIC_FIELDS = "title,authors,year,venue,publicationVenue,journal,externalIds"
+SEMANTIC_BATCH = "https://api.semanticscholar.org/graph/v1/paper/batch"
 HANDLES = "https://doi.org/api/handles/"
 DATACITE = "https://api.datacite.org/dois/"
 HOSTS = {
@@ -115,7 +117,8 @@ def public_url(url):
     except (OSError, UnicodeError):
         return False
     try:
-        return bool(infos) and all(ipaddress.ip_address(i[4][0]).is_global for i in infos)
+        addresses = [ipaddress.ip_address(i[4][0]) for i in infos]
+        return bool(addresses) and all(a.is_global and not a.is_multicast for a in addresses)
     except ValueError:
         return False
 
@@ -135,7 +138,7 @@ class _WebRedirect(HTTPRedirectHandler):
 
 
 class Transport:
-    def __init__(self, cache, offline=False, email=None):
+    def __init__(self, cache, offline=False, email=None, ttl_days=None):
         self.cache = cache
         self.offline = offline
         self.email = email
@@ -143,6 +146,10 @@ class Transport:
         self.web_opener = build_opener(_WebRedirect())
         self.last = {}
         self._lock = threading.Lock()
+        # Cached answers older than this are fetched again in live mode (None: never).
+        self.ttl = ttl_days * 86400 if ttl_days else None
+        # Records fetched in bulk ahead of per-reference lookups, keyed by identifier.
+        self.prefetched = {}
 
     def _pace(self, host, delay):
         # Reserve the next slot for this host under a lock, then sleep outside it,
@@ -152,15 +159,22 @@ class Transport:
             self.last[host] = slot
         time.sleep(max(0, slot - time.monotonic()))
 
-    def get(self, url, limit=8_000_000, web=False):
+    def get(self, url, limit=8_000_000, web=False, data=None):
         if web:
             if not self.offline and not public_url(url):
                 raise ValueError("URL is not a public http(s) address")
         elif not _allowed(url):
             raise ValueError("URL is outside the supported scholarly sources")
-        key = self.key(url)
+        key = self.key(url, data)
         path = self.cache / key if self.cache else None
-        if path is not None and path.exists():
+        stale = (
+            path is not None
+            and self.ttl is not None
+            and not self.offline
+            and path.exists()
+            and time.time() - path.stat().st_mtime > self.ttl
+        )
+        if path is not None and path.exists() and not stale:
             cached = path.read_bytes()
             status, _, content = cached.partition(b"\n")
             if (status in (b"200", b"404") or (self.offline and status.isdigit())) and len(
@@ -173,6 +187,8 @@ class Transport:
         headers = {"User-Agent": "cite-checker/2.0 (citation verification)"}
         if web:
             headers["Accept"] = "text/html,application/xhtml+xml,text/plain;q=0.9,*/*;q=0.5"
+        if data is not None:
+            headers["Content-Type"] = "application/json"
         if self.email:
             headers["User-Agent"] += f" (mailto:{self.email})"
         semantic = host == "api.semanticscholar.org"
@@ -191,29 +207,31 @@ class Transport:
         for attempt in range(tries):
             self._pace(host, delay)
             try:
-                with opener.open(Request(fetch, headers=headers), timeout=12) as response:
+                with opener.open(Request(fetch, data=data, headers=headers), timeout=20) as response:
                     content = response.read(limit + 1)
                     status = 200 if len(content) <= limit else 413
             except HTTPError as error:
                 status, content = error.code, b""
-            except (URLError, TimeoutError):
+            except (URLError, TimeoutError, http.client.HTTPException, ConnectionError):
                 status, content = 0, b""
             if status not in (0, 429, 500, 502, 503, 504):
                 break
             if attempt < tries - 1:
                 time.sleep(min(2**attempt, 16))
         # Freeze failure receipts for offline replay but retry them in live mode.
-        self.store(url, status, content)
+        self.store(url, status, content, data)
         return status, content
 
     @staticmethod
-    def key(url):
+    def key(url, data=None):
+        if data is not None:
+            url += "\nPOST " + hashlib.sha256(data).hexdigest()
         return hashlib.sha256(url.encode()).hexdigest()
 
-    def store(self, url, status, content):
+    def store(self, url, status, content, data=None):
         if self.cache is None:
             return
-        key = self.key(url)
+        key = self.key(url, data)
         path = self.cache / key
         path.parent.mkdir(parents=True, exist_ok=True)
         with TemporaryDirectory(dir=path.parent) as work:
@@ -270,6 +288,7 @@ def _title(text):
 
 
 def _surname(name):
+    name = re.sub(r"(?i),?\s+(?:jr|sr|ii|iii|iv)\.?$", "", name.strip())
     family = name.split(",")[0] if "," in name else re.sub(r"(?:\s+[A-Z]\.)+$", "", name)
     bits = words(family)
     return bits[-1] if bits else ""
@@ -345,12 +364,29 @@ def _same_record(a, b):
     )
 
 
+def _name_in(surname, pool):
+    """Surname match that tolerates transliteration and typos: Ebrahimian and
+    Ebrahimianghazani, Ren and Rent, Yu-Qing and Yuqing."""
+    if surname in pool:
+        return True
+    return any(
+        len(surname) >= 3
+        and len(other) >= 3
+        and (
+            other.startswith(surname)
+            or surname.startswith(other)
+            or (_similar(surname, other) >= 0.85 and surname[0] == other[0])
+        )
+        for other in pool
+    )
+
+
 def _shares_author(ref, row):
     cited = {_surname(name) for name in ref.get("authors", [])} - {"al", "others", ""}
     return bool(cited & {_surname(name) for name in row.get("authors", [])})
 
 
-def identity(ref, rows, completed, unregistered_doi=False):
+def identity(ref, rows, completed, unregistered_doi=False, min_indices=1):
     identifier = ref.get("doi") or ""
     arxiv_id = _arxiv_base(ref.get("arxiv_id"))
     ranked = sorted(
@@ -375,8 +411,11 @@ def identity(ref, rows, completed, unregistered_doi=False):
     }
     if not any(ref.get(k) for k in ("doi", "arxiv_id", "title", "raw")):
         return dict(result, status="insufficient_metadata")
+    # "Not found" needs enough indices to have answered. A rate-limited index is silence,
+    # and silence must not turn a real work into a phantom.
+    absent = "not_found" if len(set(completed)) >= min_indices else "lookup_unavailable"
     if not ranked:
-        return dict(result, status="not_found" if completed else "lookup_unavailable")
+        return dict(result, status=absent if completed else "lookup_unavailable")
     best = ranked[0]
     doi_record = next((r for r in ranked if identifier and r.get("doi") == identifier), None)
     arxiv_record = next(
@@ -417,11 +456,21 @@ def identity(ref, rows, completed, unregistered_doi=False):
         and ref.get("authors")
         and not any(_shares_author(ref, r) for r in ranked[:3])
     ):
-        return dict(result, status="not_found", candidates=[_public(r) for r in ranked[:3]])
-    if tied or (not plausible and similarity >= 0.72):
+        return dict(result, status=absent, candidates=[_public(r) for r in ranked[:3]])
+    # A cited title that is neither close to (>= NEAR_TITLE) nor a shortened form of any
+    # indexed title names no indexed work, even when a candidate shares an author.
+    cited, closest = _title(ref.get("title", "")), _title(best["title"])
+    shortened = len(cited.split()) >= 4 and (
+        f" {cited} " in f" {closest} " or f" {closest} " in f" {cited} "
+    )
+    if tied or (
+        not plausible
+        and similarity >= 0.72
+        and (similarity >= NEAR_TITLE or shortened or not cited)
+    ):
         return dict(result, status="ambiguous", candidates=[_public(r) for r in ranked[:3]])
     if not plausible:
-        return dict(result, status="not_found", candidates=[_public(r) for r in ranked[:3]])
+        return dict(result, status=absent, candidates=[_public(r) for r in ranked[:3]])
     improvements = {
         "years": sorted({y for r in peers for y in r.get("years", [])}),
         "venues": list(dict.fromkeys(v for r in peers for v in r.get("venues", []))),
@@ -452,15 +501,29 @@ def identity(ref, rows, completed, unregistered_doi=False):
         differences.append({"field": "title", "stated": ref["title"], "record": best["title"]})
     authors = best.get("authors", [])
     claimed_authors = ref.get("authors", [])
+    author_doubt = False
     if authors and claimed_authors:
-        have = {_surname(name) for name in authors}
-        listed = {_surname(name) for r in peers for name in r.get("authors", [])}
+        have = {_surname(name) for name in authors} - {""}
+        listed = {_surname(name) for r in peers for name in r.get("authors", [])} - {""}
         cited = {_surname(name) for name in claimed_authors}
         abbreviated = bool(cited & {"al", "others"})
-        extra = cited - listed - {"al", "others", ""}
-        omitted = exact and ref.get("authors_complete") and not abbreviated and have - cited - {""}
-        if extra or omitted:
+        cited -= {"al", "others", ""}
+        extra = {name for name in cited if not _name_in(name, listed)}
+        omitted = {name for name in have if not _name_in(name, cited)}
+        complete = ref.get("authors_complete") and not abbreviated
+        # A dropped co-author is checked when the work is pinned by identifier, or by an
+        # identical title and first author with at least a quarter of the authors missing.
+        dropped = complete and not extra and omitted and (
+            exact
+            or (similarity >= 0.97 and first_matches and len(omitted) / len(have) >= 0.25)
+        )
+        # One unmatched name in a long, otherwise matching list is usually an index error
+        # (a merged record or a misspelt name), so it needs review rather than a flag.
+        index_noise = len(extra) == 1 and len(cited) >= 4 and len(cited - extra) >= 3
+        if (extra and not index_noise) or dropped:
             differences.append({"field": "authors", "stated": claimed_authors, "record": authors})
+        elif index_noise:
+            author_doubt = True
     venue = _venue(ref.get("venue", ""))
     # Only acronym aliases such as ICML. Abbreviations like "Int Conf Mach Learn" collapse
     # to generic labels that match unrelated venues.
@@ -501,7 +564,8 @@ def identity(ref, rows, completed, unregistered_doi=False):
     ):
         differences.append({"field": "venue", "stated": ref["venue"], "record": source["venues"]})
     incomplete = bool(
-        (identifier and not doi_record and (not best.get("doi") or arxiv_record))
+        author_doubt
+        or (identifier and not doi_record and (not best.get("doi") or arxiv_record))
         or (
             explicit_arxiv
             and (
@@ -589,7 +653,10 @@ def classify(resolution):
         authors = fields.get("authors")
         overlap = _overlap(authors["stated"], authors["record"]) if authors else 1.0
         swapped_id = bool({"doi", "arxiv_id"} & fields.keys())
-        if overlap < 0.5 or swapped_id:
+        # A web page byline is weak evidence of authorship, so a mismatch there is an
+        # error to fix, not a spliced record.
+        web = (resolution.get("source") or {}).get("index") == "Web page"
+        if (overlap < 0.5 and not web) or swapped_id:
             label = "chimeric"
             if overlap < 0.5:
                 reasons.append(f"Only {overlap:.0%} of the cited authors wrote the matched work.")
@@ -799,13 +866,16 @@ def prefetch_arxiv(ids, transport, batch=50):
             entries = ET.fromstring(content).findall(f"{{{namespace}}}entry")
         except ET.ParseError:
             continue
-        by_base = {}
+        by_id, by_base = {}, {}
         for entry in entries:
             found = arxiv_of(entry.findtext(f"{{{namespace}}}id", default=""))
             if found:
+                by_id.setdefault(found, entry)
                 by_base.setdefault(_arxiv_base(found), entry)
         for wanted in group:
-            entry = by_base.get(_arxiv_base(wanted))
+            # A version-pinned request must get that version, never another one.
+            pinned = re.search(r"v\d+$", wanted)
+            entry = by_id.get(wanted) if pinned else by_base.get(wanted)
             if entry is None:
                 continue  # left for the single-ID route, which records its own status
             feed = ET.Element(f"{{{namespace}}}feed")
@@ -815,6 +885,42 @@ def prefetch_arxiv(ids, transport, batch=50):
             )
             stored += 1
     return stored
+
+
+def _semantic_id(ref):
+    if ref.get("doi"):
+        return "DOI:" + ref["doi"]
+    if ref.get("arxiv_id"):
+        return "ARXIV:" + _arxiv_base(ref["arxiv_id"])
+    return ""
+
+
+def prefetch_semantic(refs, transport, batch=400):
+    """Fetch Semantic Scholar records for every reference with a DOI or arXiv ID in one
+    POST per batch. The keyless pool allows about one request per second, so per-reference
+    title matching is the slowest step of a run. A prefetched record replaces the title
+    match only when its title equals the cited title, so decisions do not change."""
+    ids = list(dict.fromkeys(i for i in map(_semantic_id, refs) if i))
+    found = 0
+    for start in range(0, len(ids), batch):
+        group = ids[start : start + batch]
+        body = json.dumps({"ids": group}, separators=(",", ":")).encode()
+        status, content = transport.get(
+            SEMANTIC_BATCH + "?" + urlencode({"fields": SEMANTIC_FIELDS}), data=body
+        )
+        if status != 200:
+            continue
+        try:
+            items = json.loads(content)
+        except ValueError:
+            continue
+        if not isinstance(items, list) or len(items) != len(group):
+            continue
+        for key, item in zip(group, items, strict=True):
+            if isinstance(item, dict) and item.get("title"):
+                transport.prefetched[key] = _semantic(item)
+                found += 1
+    return found
 
 
 def lookup(ref, transport, indices, want_text=False):
@@ -877,6 +983,15 @@ def lookup(ref, transport, indices, want_text=False):
             continue
         if mode == "exact" and found_exact and not want_text:
             continue
+        if index == "semanticscholar":
+            early = transport.prefetched.get(_semantic_id(ref))
+            if early and _title(early["title"]) == _title(title):
+                rows.append(early)
+                completed.append(INDEX_NAMES[index])
+                attempts.append(
+                    {"index": INDEX_NAMES[index], "mode": mode, "http_status": 200, "batch": True}
+                )
+                continue
         status, content = transport.get(url)
         attempts.append({"index": INDEX_NAMES[index], "mode": mode, "http_status": status or None})
         if status == 404:
@@ -916,7 +1031,23 @@ def lookup(ref, transport, indices, want_text=False):
         status, _ = transport.get(HANDLES + quote(doi, safe="/"))
         attempts.append({"index": "doi.org", "mode": "registration", "http_status": status or None})
         unregistered = status == 404
-    result = identity(ref, rows, completed, unregistered)
+    searchable = {"crossref", "openalex", "semanticscholar"} & set(indices)
+    quorum = min(2, len(searchable)) or 1
+    result = identity(ref, rows, completed, unregistered, min_indices=quorum)
+    # Before calling a titled work missing, search arXiv titles. Many conference papers
+    # (PMLR, OpenReview) are absent from Crossref but have an arXiv version.
+    if result["status"] in ("not_found", "lookup_unavailable") and title and "arxiv" in indices:
+        phrase = " ".join(words(title))
+        url = ARXIV + "?" + urlencode({"search_query": f'ti:"{phrase}"', "max_results": 5})
+        status, content = transport.get(url)
+        attempts.append({"index": "arXiv", "mode": "title", "http_status": status or None})
+        if status == 200:
+            try:
+                rows.extend(_atom(content))
+                completed.append("arXiv")
+            except ET.ParseError:
+                attempts[-1]["response"] = "invalid"
+            result = identity(ref, rows, completed, unregistered, min_indices=quorum)
     result["attempts"] = attempts
     return result, rows
 

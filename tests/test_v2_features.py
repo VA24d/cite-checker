@@ -344,3 +344,174 @@ class Judge(unittest.TestCase):
                              "cached")
             failing = run_shards(folder, "false", pattern="none-*.json", backoff=0)
             self.assertEqual(failing["shards"], {})
+
+
+class SpeedAndRules(unittest.TestCase):
+    def test_semantic_batch_replaces_title_match_only_on_equal_title(self):
+        from scripts.sources import SEMANTIC_BATCH, lookup, prefetch_semantic
+
+        item = {"paperId": "p1", "title": "Attention Is All You Need", "year": 2017,
+                "authors": [{"name": "Ashish Vaswani"}], "externalIds": {"DOI": "10.1/att"},
+                "venue": "NeurIPS"}
+        calls = []
+
+        class Fake:
+            offline, cache, prefetched = False, None, {}
+
+            def get(self, url, limit=0, web=False, data=None):
+                calls.append(url.split("?")[0])
+                if url.startswith(SEMANTIC_BATCH):
+                    return 200, json.dumps([item, None]).encode()
+                return 404, b""
+
+        fake = Fake()
+        refs = [ref(id="a", doi="10.1/att", title="Attention is all you need"),
+                ref(id="b", doi="10.1/zzz", title="Other")]
+        self.assertEqual(prefetch_semantic(refs, fake), 1)
+        calls.clear()
+        lookup(refs[0], fake, ["semanticscholar"])
+        self.assertEqual(calls, [])
+        lookup(refs[1], fake, ["semanticscholar"])
+        self.assertEqual(len(calls), 1)
+
+    def test_post_cache_key_and_ttl(self):
+        import os
+        import time
+
+        with TemporaryDirectory() as tmp:
+            t = Transport(Path(tmp), ttl_days=1)
+            self.assertNotEqual(t.key("u", b"a"), t.key("u", b"b"))
+            self.assertNotEqual(t.key("u"), t.key("u", b"a"))
+            url = ARXIV + "?id_list=1"
+            t.store(url, 200, b"<feed/>")
+            self.assertEqual(t.get(url), (200, b"<feed/>"))
+            old = time.time() - 3 * 86400
+            os.utime(Path(tmp) / t.key(url), (old, old))
+            t.offline = True  # offline replay ignores age
+            self.assertEqual(t.get(url), (200, b"<feed/>"))
+
+    def test_unrelated_title_sharing_an_author_is_not_found(self):
+        from scripts.sources import identity
+
+        cited = ref(title="Structure-aware video generation with latent diffusion models",
+                    authors=["Zed Q", "Ann Blattmann"])
+        record = {"index": "OpenAlex", "title": "Align Your Latents: High-Resolution Video "
+                  "Synthesis with Latent Diffusion Models", "authors": ["Andreas Blattmann"],
+                  "doi": "10.1/x", "years": [2023]}
+        self.assertEqual(identity(cited, [record], ["OpenAlex"])["status"], "not_found")
+        short = ref(title="Align your latents: high-resolution video synthesis", authors=["Andreas Blattmann"])
+        self.assertNotEqual(identity(short, [record], ["OpenAlex"])["status"], "not_found")
+
+    def test_caveat_passes_through_and_directional_insufficient_escalates(self):
+        claims = [{"pair_id": "p", "claim": "Drug X reduces mortality.", "proposed_verdict":
+                   "insufficient", "verdict": "insufficient", "gate_issues": [], "source": {}},
+                  {"pair_id": "q", "claim": "Gene Y is expressed in liver.", "proposed_verdict":
+                   "insufficient", "verdict": "insufficient", "gate_issues": [], "source": {}}]
+        self.assertEqual(escalations({"claims": claims}), {"p"})
+        with TemporaryDirectory() as tmp:
+            run = Shards._run(None, Path(tmp))
+            pair = run["pairs"][0]["id"]
+            report = gate(run, [{"pair_id": pair, "verdict": "insufficient", "reason": "r",
+                                 "caveat": "mice only"}])
+            self.assertEqual(report["claims"][0]["caveat"], "mice only")
+
+
+class ReviewFixes(unittest.TestCase):
+    def test_suffix_multicast_and_nested_names(self):
+        from scripts.sources import _surname
+        from scripts.web import _names
+
+        self.assertEqual(_surname("John Doe Jr."), "doe")
+        self.assertEqual(_surname("Doe, John, Jr"), "doe")
+        self.assertFalse(public_url("http://224.0.0.1/"))
+        self.assertEqual(_names({"name": {"name": "Ada"}}), ["Ada"])
+        cff = parse_cff("authors:\n  - family-names: Doe\n    affiliation:\n      name: MIT\n")
+        self.assertEqual(cff["software"]["authors"], ["Doe"])
+
+
+class StructuredVotes(unittest.TestCase):
+    def test_derived_verdicts_and_majority(self):
+        from scripts.shards import derive_verdict, vote
+
+        base = {"pair_id": "p", "quotes": ["q"], "reason": "r"}
+        cases = [
+            ({"direction": "opposite"}, "contradicted"),
+            ({"direction": "same", "numbers": "mismatch"}, "contradicted"),
+            ({"direction": "same", "numbers": "n/a"}, "supported"),
+            ({"direction": "same", "numbers": "absent"}, "partially_supported"),
+            ({"direction": "same", "extra_clauses": {"x": False}}, "partially_supported"),
+            ({"direction": "none"}, "insufficient"),
+            ({"direction": "same", "quotes": []}, "insufficient"),
+        ]
+        for fields, expected in cases:
+            self.assertEqual(derive_verdict({**base, **fields})["verdict"], expected, fields)
+        a = [{**base, "direction": "same"}]
+        b = [{**base, "direction": "opposite"}]
+        merged = vote([a, a, b])[0]
+        self.assertEqual((merged["verdict"], merged["split"]), ("supported", False))
+        self.assertTrue(vote([a, b])[0]["split"])
+        self.assertTrue(vote([a, b, [{**base, "direction": "none"}]])[0]["split"])
+
+
+class CorporateAuthors(unittest.TestCase):
+    def test_team_byline_is_not_compared_and_web_author_gap_is_not_chimeric(self):
+        page = PAGE.replace(b"Ada Lovelace", b"Alex Gartner")
+        r = ref(title="Scaling Laws Explained", authors=["Censys ARC Research Team"],
+                url="https://blog.example.org/scaling")
+        res, _ = check_web(r, FakeTransport({"https://blog.example.org/": (200, page)}))
+        self.assertEqual(res["status"], "verified")
+        web_gap = {"status": "metadata_mismatch", "source": {"index": "Web page"},
+                   "differences": [{"field": "authors", "stated": ["Bo Li"], "record": ["X Y"]}]}
+        self.assertEqual(classify(web_gap)["label"], "metadata_error")
+
+
+class LatexExpansion(unittest.TestCase):
+    def test_input_files_and_macros_are_expanded(self):
+        from scripts.bibliography import read_input
+
+        with TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "numbers.tex").write_text("\\newcommand{\\rate}{42\\%}\n\\def\\tool{PakoScan}\n"
+                "\\newcommand{\\ui}{\\mbox{\\texttt{\\textquotesingle unsafe-inline\\textquotesingle}}\\xspace}\n"
+                "\\newcommand{\\box}[2]{\\par\\fbox{\\textbf{#1} #2}\\par}\n")
+            (root / "refs.bib").write_text("@article{smith2020,title={A Study},author={Smith, Ann},year={2020}}\n")
+            (root / "main.tex").write_text(
+                "\\input{numbers}\n\\section{Related Work}\\label{sec:rel}\n"
+                "% \\cite{ignored}\n"
+                "\\emph{\\tool} flagged \\rate{} of packages~\\cite{smith2020}.\n"
+                "\\box{Case A.}{Sites used \\ui widely~\\cite{smith2020}.}\n"
+                "\\bibliography{refs}\n"
+            )
+            refs, claims, _ = read_input(root / "main.tex", [])[:3]
+        text = " ".join(c["text"] for c in claims)
+        self.assertIn("PakoScan flagged 42% of packages", text)
+        self.assertNotIn("\\label", text)
+        self.assertNotIn("\\rate", text)
+        self.assertIn("Sites used 'unsafe-inline' widely", text)
+        self.assertNotIn("fbox", text)
+        self.assertNotIn("ignored", " ".join(k for c in claims for k in c.get("keys", [])))
+
+
+class EscalationLoop(unittest.TestCase):
+    def test_escalated_answers_are_marked_and_not_reescalated(self):
+        import argparse
+        from scripts.cite_checker import _finalize
+
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            run = Shards._run(None, root)
+            pair = run["pairs"][0]["id"]
+            (root / "assessments").mkdir()
+            (root / "assessments" / "shard-01.json").write_text(json.dumps(
+                [{"pair_id": pair, "verdict": "contradicted", "reason": "r", "quotes": []}]))
+            args = argparse.Namespace(run=root, assessments=[root / "assessments"], escalate_size=6)
+            self.assertEqual(_finalize(args)["escalate"]["pairs"], 2)  # this pair + an unanswered one
+            (root / "assessments" / "escalate-01.json").write_text(json.dumps(
+                [{"pair_id": pair, "verdict": "contradicted", "reason": "r", "quotes": []}]))
+            rows = collect_assessments([root / "assessments"])
+            self.assertTrue(rows[0]["escalated"])
+            summary = _finalize(args)
+            self.assertEqual(summary["escalate"]["pairs"], 1)
+            shard = json.loads(Path(summary["escalate"]["shards"][0]).read_text())
+            self.assertNotIn(pair, json.dumps(shard))
+            self.assertEqual(summary["escalated_answers"], 1)

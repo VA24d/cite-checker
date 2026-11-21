@@ -1,0 +1,1603 @@
+{
+  "coverage": {
+    "Crossref": {
+      "responses": {
+        "200": 37,
+        "404": 3
+      },
+      "rows_attempted": 37,
+      "rows_completed": 37
+    },
+    "OpenAlex": {
+      "responses": {
+        "200": 21,
+        "404": 3
+      },
+      "rows_attempted": 21,
+      "rows_completed": 21
+    },
+    "Semantic Scholar": {
+      "responses": {
+        "200": 41,
+        "404": 5
+      },
+      "rows_attempted": 46,
+      "rows_completed": 46
+    },
+    "doi.org": {
+      "responses": {
+        "400": 1,
+        "404": 2
+      },
+      "rows_attempted": 3,
+      "rows_completed": 0
+    },
+    "rows_with_no_completed_source": 0
+  },
+  "doi_only_outcomes": {
+    "no_doi": 18,
+    "not_found": 12,
+    "resolves": 16
+  },
+  "fixture_rows": 831,
+  "fixture_sha256": "e42ef2cbe2b5550768c191f0526d9c75935adda5fd630dba8724e479975907d1",
+  "indices": [
+    "crossref",
+    "openalex",
+    "semanticscholar",
+    "arxiv"
+  ],
+  "matcher_sha256": {
+    "bibliography.py": "3c480d2b23476939dcb9306f37692cd00134ae2d2176c2fb104ab0e262bd293b",
+    "sources.py": "f7c7e6902e80e86cdd4fbf6dea40874d802cdb09b94abbc4f555fd9791611227"
+  },
+  "mode": "cache-only",
+  "recorded_utc": "2026-11-21T09:15:37+00:00",
+  "rows": [
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "arXiv",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "0e9d5f62fd31",
+      "difficulty_tier": 1,
+      "doi_only": "not_found",
+      "hallucination_type": "placeholder_authors",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Semantic Scholar",
+        "arXiv"
+      ],
+      "mismatch_fields": [
+        "authors"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "chimeric"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "arXiv",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "760ad0bc9e7a",
+      "difficulty_tier": 1,
+      "doi_only": "not_found",
+      "hallucination_type": "nonexistent_venue",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Semantic Scholar",
+        "arXiv"
+      ],
+      "mismatch_fields": [],
+      "status": "metadata_unconfirmed",
+      "triage": "unconfirmed"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 404,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        },
+        {
+          "http_status": 200,
+          "index": "arXiv",
+          "mode": "title"
+        }
+      ],
+      "bibtex_key": "9d76351928e0",
+      "difficulty_tier": 3,
+      "doi_only": "no_doi",
+      "hallucination_type": "plausible_fabrication",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar",
+        "arXiv"
+      ],
+      "mismatch_fields": [],
+      "status": "not_found",
+      "triage": "phantom"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "a299ba8e7d7f",
+      "difficulty_tier": 2,
+      "doi_only": "resolves",
+      "hallucination_type": "merged_citation",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "authors",
+        "venue"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "chimeric"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "a4a79198d7e0",
+      "difficulty_tier": 1,
+      "doi_only": "no_doi",
+      "hallucination_type": "future_date",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "year"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "metadata_error"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "batch": true,
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "a5ce9b3b8868",
+      "difficulty_tier": null,
+      "doi_only": "resolves",
+      "hallucination_type": null,
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [],
+      "status": "verified",
+      "triage": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "b429c4a9cd1d",
+      "difficulty_tier": 2,
+      "doi_only": "no_doi",
+      "hallucination_type": "merged_citation",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "authors",
+        "year",
+        "venue"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "chimeric"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 404,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        },
+        {
+          "http_status": 200,
+          "index": "arXiv",
+          "mode": "title"
+        }
+      ],
+      "bibtex_key": "b74335e5c7fe",
+      "difficulty_tier": 3,
+      "doi_only": "no_doi",
+      "hallucination_type": "near_miss_title",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar",
+        "arXiv"
+      ],
+      "mismatch_fields": [],
+      "status": "not_found",
+      "triage": "phantom"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "b79b4a67bbb9",
+      "difficulty_tier": 2,
+      "doi_only": "no_doi",
+      "hallucination_type": "wrong_venue",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "venue"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "metadata_error"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "b8df20541167",
+      "difficulty_tier": 1,
+      "doi_only": "no_doi",
+      "hallucination_type": "nonexistent_venue",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "venue"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "metadata_error"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "be4b100b52ba",
+      "difficulty_tier": null,
+      "doi_only": "resolves",
+      "hallucination_type": null,
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [],
+      "status": "verified",
+      "triage": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "batch": true,
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "be8aaab52a22",
+      "difficulty_tier": null,
+      "doi_only": "resolves",
+      "hallucination_type": null,
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [],
+      "status": "verified",
+      "triage": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "arXiv",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "c210a02c8fc6",
+      "difficulty_tier": null,
+      "doi_only": "not_found",
+      "hallucination_type": null,
+      "label": "VALID",
+      "looked_up": [
+        "Semantic Scholar",
+        "arXiv"
+      ],
+      "mismatch_fields": [],
+      "status": "verified",
+      "triage": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 404,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "http_status": 404,
+          "index": "OpenAlex",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        },
+        {
+          "http_status": 404,
+          "index": "doi.org",
+          "mode": "registration"
+        }
+      ],
+      "bibtex_key": "c305e6c1a86d",
+      "difficulty_tier": 1,
+      "doi_only": "not_found",
+      "hallucination_type": "fabricated_doi",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "doi"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "chimeric"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 404,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "http_status": 404,
+          "index": "OpenAlex",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        },
+        {
+          "http_status": 400,
+          "index": "doi.org",
+          "mode": "registration"
+        }
+      ],
+      "bibtex_key": "c513face9404",
+      "difficulty_tier": 1,
+      "doi_only": "not_found",
+      "hallucination_type": "fabricated_doi",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "doi"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "chimeric"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "c59052d3cde9",
+      "difficulty_tier": null,
+      "doi_only": "no_doi",
+      "hallucination_type": null,
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [],
+      "status": "verified",
+      "triage": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "c869311add65",
+      "difficulty_tier": 3,
+      "doi_only": "resolves",
+      "hallucination_type": "near_miss_title",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "title"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "metadata_error"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "c95b12add8e9",
+      "difficulty_tier": null,
+      "doi_only": "no_doi",
+      "hallucination_type": null,
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [],
+      "status": "verified",
+      "triage": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "batch": true,
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "ca83a075c2f6",
+      "difficulty_tier": 1,
+      "doi_only": "resolves",
+      "hallucination_type": "nonexistent_venue",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "venue"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "metadata_error"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "arXiv",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "cb3c903e17db",
+      "difficulty_tier": 2,
+      "doi_only": "not_found",
+      "hallucination_type": "partial_author_list",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Semantic Scholar",
+        "arXiv"
+      ],
+      "mismatch_fields": [
+        "authors",
+        "year"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "metadata_error"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "cbb8d9cdf512",
+      "difficulty_tier": 2,
+      "doi_only": "no_doi",
+      "hallucination_type": "swapped_authors",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "authors"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "chimeric"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 404,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        },
+        {
+          "http_status": 200,
+          "index": "arXiv",
+          "mode": "title"
+        }
+      ],
+      "bibtex_key": "ce56b9084122",
+      "difficulty_tier": 3,
+      "doi_only": "no_doi",
+      "hallucination_type": "plausible_fabrication",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar",
+        "arXiv"
+      ],
+      "mismatch_fields": [],
+      "status": "not_found",
+      "triage": "phantom"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "arXiv",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "cf1cbfac669f",
+      "difficulty_tier": 2,
+      "doi_only": "not_found",
+      "hallucination_type": "swapped_authors",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Semantic Scholar",
+        "arXiv"
+      ],
+      "mismatch_fields": [
+        "title"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "metadata_error"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "arXiv",
+          "mode": "exact"
+        },
+        {
+          "batch": true,
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "cff2f0bb469f",
+      "difficulty_tier": null,
+      "doi_only": "not_found",
+      "hallucination_type": null,
+      "label": "VALID",
+      "looked_up": [
+        "Semantic Scholar",
+        "arXiv"
+      ],
+      "mismatch_fields": [],
+      "status": "verified",
+      "triage": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "d303676eeb1c",
+      "difficulty_tier": 2,
+      "doi_only": "resolves",
+      "hallucination_type": "swapped_authors",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "title",
+        "authors"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "chimeric"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "d389b4a0dad4",
+      "difficulty_tier": 1,
+      "doi_only": "resolves",
+      "hallucination_type": "nonexistent_venue",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "venue"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "metadata_error"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "d6682ee1e23b",
+      "difficulty_tier": 2,
+      "doi_only": "no_doi",
+      "hallucination_type": "preprint_as_published",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "venue"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "metadata_error"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "batch": true,
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "d8b8c8693782",
+      "difficulty_tier": null,
+      "doi_only": "resolves",
+      "hallucination_type": null,
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [],
+      "status": "verified",
+      "triage": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "batch": true,
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "dd065c07bff2",
+      "difficulty_tier": null,
+      "doi_only": "resolves",
+      "hallucination_type": null,
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [],
+      "status": "verified",
+      "triage": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "arXiv",
+          "mode": "exact"
+        },
+        {
+          "batch": true,
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "dfceb6a9669f",
+      "difficulty_tier": 3,
+      "doi_only": "not_found",
+      "hallucination_type": "arxiv_version_mismatch",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Semantic Scholar",
+        "arXiv"
+      ],
+      "mismatch_fields": [
+        "year"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "metadata_error"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 404,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        },
+        {
+          "http_status": 200,
+          "index": "arXiv",
+          "mode": "title"
+        }
+      ],
+      "bibtex_key": "e097911485a6",
+      "difficulty_tier": 3,
+      "doi_only": "no_doi",
+      "hallucination_type": "plausible_fabrication",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar",
+        "arXiv"
+      ],
+      "mismatch_fields": [],
+      "status": "not_found",
+      "triage": "phantom"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "batch": true,
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "e33afcff65f5",
+      "difficulty_tier": 2,
+      "doi_only": "resolves",
+      "hallucination_type": "merged_citation",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "authors",
+        "venue"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "chimeric"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "batch": true,
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "e441c6b154d7",
+      "difficulty_tier": null,
+      "doi_only": "resolves",
+      "hallucination_type": null,
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [],
+      "status": "verified",
+      "triage": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "e4d9322cf784",
+      "difficulty_tier": null,
+      "doi_only": "no_doi",
+      "hallucination_type": null,
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [],
+      "status": "verified",
+      "triage": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "e52a7e717545",
+      "difficulty_tier": 3,
+      "doi_only": "no_doi",
+      "hallucination_type": "arxiv_version_mismatch",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "venue"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "metadata_error"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "e8dc9178239f",
+      "difficulty_tier": null,
+      "doi_only": "no_doi",
+      "hallucination_type": null,
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [],
+      "status": "verified",
+      "triage": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "e8f5f99de222",
+      "difficulty_tier": 3,
+      "doi_only": "resolves",
+      "hallucination_type": "arxiv_version_mismatch",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "year"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "metadata_error"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "batch": true,
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "ec72a166ae8f",
+      "difficulty_tier": null,
+      "doi_only": "resolves",
+      "hallucination_type": null,
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [],
+      "status": "verified",
+      "triage": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "arXiv",
+          "mode": "exact"
+        },
+        {
+          "batch": true,
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "ec868a1f2815",
+      "difficulty_tier": 3,
+      "doi_only": "not_found",
+      "hallucination_type": "arxiv_version_mismatch",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Semantic Scholar",
+        "arXiv"
+      ],
+      "mismatch_fields": [
+        "year"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "metadata_error"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "ef915f54025e",
+      "difficulty_tier": null,
+      "doi_only": "resolves",
+      "hallucination_type": null,
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [],
+      "status": "verified",
+      "triage": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "f06e39dcbf3a",
+      "difficulty_tier": 1,
+      "doi_only": "no_doi",
+      "hallucination_type": "future_date",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "year"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "metadata_error"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "batch": true,
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "f3f01eb8c6f4",
+      "difficulty_tier": 2,
+      "doi_only": "resolves",
+      "hallucination_type": "swapped_authors",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "authors"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "metadata_error"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 404,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        },
+        {
+          "http_status": 200,
+          "index": "arXiv",
+          "mode": "title"
+        }
+      ],
+      "bibtex_key": "fcf41787a617",
+      "difficulty_tier": 3,
+      "doi_only": "no_doi",
+      "hallucination_type": "plausible_fabrication",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar",
+        "arXiv"
+      ],
+      "mismatch_fields": [],
+      "status": "not_found",
+      "triage": "phantom"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 404,
+          "index": "Crossref",
+          "mode": "exact"
+        },
+        {
+          "http_status": 404,
+          "index": "OpenAlex",
+          "mode": "exact"
+        },
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        },
+        {
+          "http_status": 404,
+          "index": "doi.org",
+          "mode": "registration"
+        }
+      ],
+      "bibtex_key": "feae66fc8c02",
+      "difficulty_tier": 1,
+      "doi_only": "not_found",
+      "hallucination_type": "fabricated_doi",
+      "label": "HALLUCINATED",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [
+        "doi"
+      ],
+      "status": "metadata_mismatch",
+      "triage": "chimeric"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "Crossref",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "OpenAlex",
+          "mode": "search"
+        },
+        {
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "fed6a127bd10",
+      "difficulty_tier": null,
+      "doi_only": "no_doi",
+      "hallucination_type": null,
+      "label": "VALID",
+      "looked_up": [
+        "Crossref",
+        "OpenAlex",
+        "Semantic Scholar"
+      ],
+      "mismatch_fields": [],
+      "status": "verified",
+      "triage": "verified"
+    },
+    {
+      "attempts": [
+        {
+          "http_status": 200,
+          "index": "arXiv",
+          "mode": "exact"
+        },
+        {
+          "batch": true,
+          "http_status": 200,
+          "index": "Semantic Scholar",
+          "mode": "venue"
+        }
+      ],
+      "bibtex_key": "ff065f4c5765",
+      "difficulty_tier": null,
+      "doi_only": "not_found",
+      "hallucination_type": null,
+      "label": "VALID",
+      "looked_up": [
+        "Semantic Scholar",
+        "arXiv"
+      ],
+      "mismatch_fields": [],
+      "status": "verified",
+      "triage": "verified"
+    }
+  ],
+  "sample": {
+    "hallucinated_per_tier": 10,
+    "rows": 46,
+    "seed": "cite-checker-hallmark-v1",
+    "split": "holdout",
+    "valid": 16
+  },
+  "scores": {
+    "crossref_doi_only": {
+      "fn": 21,
+      "fp": 3,
+      "tn": 13,
+      "tp": 9
+    },
+    "strict": {
+      "fn": 1,
+      "fp": 0,
+      "tn": 16,
+      "tp": 29
+    },
+    "triage": {
+      "fn": 0,
+      "fp": 0,
+      "tn": 16,
+      "tp": 30
+    }
+  },
+  "status_by_label": {
+    "HALLUCINATED": {
+      "metadata_mismatch": 24,
+      "metadata_unconfirmed": 1,
+      "not_found": 5
+    },
+    "VALID": {
+      "verified": 16
+    }
+  },
+  "triage_by_type": {
+    "arxiv_version_mismatch": {
+      "metadata_error": 4
+    },
+    "fabricated_doi": {
+      "chimeric": 3
+    },
+    "future_date": {
+      "metadata_error": 2
+    },
+    "merged_citation": {
+      "chimeric": 3
+    },
+    "near_miss_title": {
+      "metadata_error": 1,
+      "phantom": 1
+    },
+    "nonexistent_venue": {
+      "metadata_error": 3,
+      "unconfirmed": 1
+    },
+    "partial_author_list": {
+      "metadata_error": 1
+    },
+    "placeholder_authors": {
+      "chimeric": 1
+    },
+    "plausible_fabrication": {
+      "phantom": 4
+    },
+    "preprint_as_published": {
+      "metadata_error": 1
+    },
+    "swapped_authors": {
+      "chimeric": 2,
+      "metadata_error": 2
+    },
+    "valid": {
+      "verified": 16
+    },
+    "wrong_venue": {
+      "metadata_error": 1
+    }
+  }
+}

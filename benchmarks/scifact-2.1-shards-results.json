@@ -1,0 +1,279 @@
+{
+ "pipeline": "prepare --local-only; shard (8 pairs, top 3 passages); judge with claude -p --model haiku; finalize; escalate failed quotes, contradicted, partially_supported, and insufficient calls on claims with a number, direction or negation to claude -p --model opus; finalize",
+ "rules": "references/judging.md version 2: scope gaps go to a caveat field; a source stating the opposite of the main finding is contradicted",
+ "history": "fresh and confirmation errors from version 1 were read while writing these rules; dev and holdout were not",
+ "runs": {
+  "dev/haiku": {
+   "n": 18,
+   "correct": 15,
+   "macro_f1": 0.8363636363636364,
+   "scores": {
+    "supported": {
+     "true_positive": 5,
+     "false_positive": 0,
+     "false_negative": 1,
+     "f1": 0.9090909090909091
+    },
+    "contradicted": {
+     "true_positive": 4,
+     "false_positive": 0,
+     "false_negative": 2,
+     "f1": 0.8
+    },
+    "insufficient": {
+     "true_positive": 6,
+     "false_positive": 3,
+     "false_negative": 0,
+     "f1": 0.8
+    }
+   },
+   "quote_gate_failures": 0,
+   "usage": {
+    "calls": 3,
+    "input_tokens_est": 10743,
+    "model_seconds": 45.7,
+    "output_tokens_est": 1325,
+    "runner": "claude -p --model haiku",
+    "usd_est": 0.0
+   }
+  },
+  "dev/haiku+opus_escalation": {
+   "n": 18,
+   "correct": 15,
+   "macro_f1": 0.8363636363636364,
+   "scores": {
+    "supported": {
+     "true_positive": 5,
+     "false_positive": 0,
+     "false_negative": 1,
+     "f1": 0.9090909090909091
+    },
+    "contradicted": {
+     "true_positive": 4,
+     "false_positive": 0,
+     "false_negative": 2,
+     "f1": 0.8
+    },
+    "insufficient": {
+     "true_positive": 6,
+     "false_positive": 3,
+     "false_negative": 0,
+     "f1": 0.8
+    }
+   },
+   "quote_gate_failures": 0,
+   "usage": {
+    "calls": 2,
+    "input_tokens_est": 5917,
+    "model_seconds": 28.5,
+    "output_tokens_est": 599,
+    "runner": "claude -p --model opus",
+    "usd_est": 0.0
+   }
+  },
+  "holdout/haiku": {
+   "n": 24,
+   "correct": 18,
+   "macro_f1": 0.7824463118580764,
+   "scores": {
+    "supported": {
+     "true_positive": 6,
+     "false_positive": 0,
+     "false_negative": 2,
+     "f1": 0.8571428571428571
+    },
+    "contradicted": {
+     "true_positive": 5,
+     "false_positive": 2,
+     "false_negative": 3,
+     "f1": 0.6666666666666666
+    },
+    "insufficient": {
+     "true_positive": 7,
+     "false_positive": 2,
+     "false_negative": 1,
+     "f1": 0.8235294117647058
+    }
+   },
+   "quote_gate_failures": 0,
+   "usage": {
+    "calls": 3,
+    "input_tokens_est": 12999,
+    "model_seconds": 65.1,
+    "output_tokens_est": 1894,
+    "runner": "claude -p --model haiku",
+    "usd_est": 0.0
+   }
+  },
+  "holdout/haiku+opus_escalation": {
+   "n": 24,
+   "correct": 21,
+   "macro_f1": 0.8720588235294118,
+   "scores": {
+    "supported": {
+     "true_positive": 8,
+     "false_positive": 1,
+     "false_negative": 0,
+     "f1": 0.9411764705882353
+    },
+    "contradicted": {
+     "true_positive": 6,
+     "false_positive": 1,
+     "false_negative": 2,
+     "f1": 0.8
+    },
+    "insufficient": {
+     "true_positive": 7,
+     "false_positive": 1,
+     "false_negative": 1,
+     "f1": 0.875
+    }
+   },
+   "quote_gate_failures": 0,
+   "usage": {
+    "calls": 3,
+    "input_tokens_est": 9588,
+    "model_seconds": 84.6,
+    "output_tokens_est": 1419,
+    "runner": "claude -p --model opus",
+    "usd_est": 0.0
+   }
+  },
+  "confirmation/haiku": {
+   "n": 36,
+   "correct": 33,
+   "macro_f1": 0.9565217391304349,
+   "scores": {
+    "supported": {
+     "true_positive": 11,
+     "false_positive": 0,
+     "false_negative": 1,
+     "f1": 0.9565217391304348
+    },
+    "contradicted": {
+     "true_positive": 11,
+     "false_positive": 0,
+     "false_negative": 1,
+     "f1": 0.9565217391304348
+    },
+    "insufficient": {
+     "true_positive": 11,
+     "false_positive": 0,
+     "false_negative": 1,
+     "f1": 0.9565217391304348
+    }
+   },
+   "quote_gate_failures": 0,
+   "usage": {
+    "calls": 5,
+    "input_tokens_est": 19300,
+    "model_seconds": 97.9,
+    "output_tokens_est": 3131,
+    "runner": "claude -p --model haiku",
+    "usd_est": 0.0
+   }
+  },
+  "confirmation/haiku+opus_escalation": {
+   "n": 36,
+   "correct": 34,
+   "macro_f1": 0.9576811594202899,
+   "scores": {
+    "supported": {
+     "true_positive": 12,
+     "false_positive": 1,
+     "false_negative": 0,
+     "f1": 0.96
+    },
+    "contradicted": {
+     "true_positive": 11,
+     "false_positive": 0,
+     "false_negative": 1,
+     "f1": 0.9565217391304348
+    },
+    "insufficient": {
+     "true_positive": 11,
+     "false_positive": 0,
+     "false_negative": 1,
+     "f1": 0.9565217391304348
+    }
+   },
+   "quote_gate_failures": 0,
+   "usage": {
+    "calls": 3,
+    "input_tokens_est": 10328,
+    "model_seconds": 70.5,
+    "output_tokens_est": 1762,
+    "runner": "claude -p --model opus",
+    "usd_est": 0.0
+   }
+  },
+  "fresh/haiku": {
+   "n": 48,
+   "correct": 37,
+   "macro_f1": 0.7945402298850576,
+   "scores": {
+    "supported": {
+     "true_positive": 14,
+     "false_positive": 2,
+     "false_negative": 2,
+     "f1": 0.875
+    },
+    "contradicted": {
+     "true_positive": 11,
+     "false_positive": 2,
+     "false_negative": 5,
+     "f1": 0.7586206896551724
+    },
+    "insufficient": {
+     "true_positive": 12,
+     "false_positive": 4,
+     "false_negative": 4,
+     "f1": 0.75
+    }
+   },
+   "quote_gate_failures": 0,
+   "usage": {
+    "calls": 6,
+    "input_tokens_est": 25708,
+    "model_seconds": 113.6,
+    "output_tokens_est": 3691,
+    "runner": "claude -p --model haiku",
+    "usd_est": 0.0
+   }
+  },
+  "fresh/haiku+opus_escalation": {
+   "n": 48,
+   "correct": 42,
+   "macro_f1": 0.8746732026143791,
+   "scores": {
+    "supported": {
+     "true_positive": 15,
+     "false_positive": 3,
+     "false_negative": 1,
+     "f1": 0.8823529411764706
+    },
+    "contradicted": {
+     "true_positive": 14,
+     "false_positive": 2,
+     "false_negative": 2,
+     "f1": 0.875
+    },
+    "insufficient": {
+     "true_positive": 13,
+     "false_positive": 1,
+     "false_negative": 3,
+     "f1": 0.8666666666666667
+    }
+   },
+   "quote_gate_failures": 0,
+   "usage": {
+    "calls": 5,
+    "input_tokens_est": 17357,
+    "model_seconds": 109.1,
+    "output_tokens_est": 2381,
+    "runner": "claude -p --model opus",
+    "usd_est": 0.0
+   }
+  }
+ }
+}

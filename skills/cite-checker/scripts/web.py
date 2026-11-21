@@ -28,6 +28,13 @@ DATE_META = (
     "article:published_time",
 )
 VENUE_META = ("citation_journal_title", "citation_conference_title", "og:site_name")
+# Corporate bylines ("Censys ARC Research Team") are not people and rarely match a page's
+# author meta tag, which names the individual writer.
+ORGANIZATION = re.compile(
+    r"(?i)\b(?:team|group|inc|ltd|llc|lab|labs|laboratory|research|foundation|corporation|"
+    r"corp|company|project|contributors|consortium|committee|association|institute|"
+    r"university|agency|council|organi[sz]ation|security|staff|editors|authors)\b"
+)
 CITE_REQUEST = re.compile(
     r"(?i)\b(?:please\s+cite|how\s+to\s+cite|if\s+you\s+use\s+[^.]{0,80}?\bcite|"
     r"cite\s+(?:this|our)\s+(?:work|paper|software|dataset))"
@@ -91,7 +98,8 @@ def _names(value):
     if isinstance(value, str):
         return [value]
     if isinstance(value, dict):
-        return [value["name"]] if value.get("name") else []
+        name = value.get("name")
+        return _names(name) if isinstance(name, (dict, list)) else [str(name)] if name else []
     if isinstance(value, list):
         return [n for item in value for n in _names(item)]
     return []
@@ -183,7 +191,8 @@ def parse_cff(text):
             if value and not in_authors:
                 block[key] = value
             continue
-        if in_authors and key in ("family-names", "name"):
+        # "name" counts only as a list item; a nested affiliation also has a name key.
+        if in_authors and (key == "family-names" or (key == "name" and line.startswith("- "))):
             block["authors"].append(value)
     result = {}
     for name, block in blocks.items():
@@ -332,8 +341,9 @@ def check_web(ref, transport):
     in_text = _title(stated_title) in _title(page["text"][:3000]) if stated_title else False
     if stated_title and page["titles"] and score < 0.6 and not in_text:
         differences.append({"field": "title", "stated": stated_title, "record": page["titles"][0]})
-    if ref.get("authors") and page["authors"]:
-        cited = {_surname(a) for a in ref["authors"]} - {"al", "others", ""}
+    people = [a for a in ref.get("authors", []) if not ORGANIZATION.search(a)]
+    if people and page["authors"]:
+        cited = {_surname(a) for a in people} - {"al", "others", ""}
         if cited and not cited & {_surname(a) for a in page["authors"]}:
             differences.append(
                 {"field": "authors", "stated": ref["authors"], "record": page["authors"]}

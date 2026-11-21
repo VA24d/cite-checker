@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -25,6 +26,7 @@ from scripts.sources import (
     identity,
     lookup,
     prefetch_arxiv,
+    prefetch_semantic,
 )
 from scripts.structure import check as structure_check
 from scripts.web import check_web, is_web
@@ -70,7 +72,9 @@ def _prepare(args):
         claims = []
         notices.append("Claim checks were skipped in references-only mode.")
     required = {key for claim in claims for key in claim["references"]}
-    transport = Transport(args.cache or (args.out / "http-cache"), args.offline, args.mailto)
+    # One cache shared by every run, so repeat audits and shared references are free.
+    cache = args.cache or Path(os.environ.get("CITE_CHECKER_CACHE", Path.home() / ".cache" / "cite-checker"))
+    transport = Transport(cache, args.offline, args.mailto, ttl_days=args.cache_days)
 
     def resolve(ref):
         """Resolve one reference. Runs in a worker thread; returns its own notices."""
@@ -111,6 +115,8 @@ def _prepare(args):
 
     if not args.local_only and "arxiv" in args.indices:
         prefetch_arxiv([r.get("arxiv_id") for r in refs], transport)
+    if not args.local_only and "semanticscholar" in args.indices:
+        prefetch_semantic(refs, transport)
     resolutions, bodies = {}, {}
     workers = 1 if args.offline or args.local_only else args.workers
     with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
@@ -247,6 +253,8 @@ def markdown(report):
                 _escape(row["reason"]),
             ]
         )
+        if row.get("caveat"):
+            lines.extend(["", f"**Caveat** {_escape(row['caveat'])}"])
         for e in row["evidence"]:
             url = _url(e["url"])
             source_label = f"{e['origin']} · {e['level'].replace('_', ' ')}"
@@ -269,7 +277,9 @@ def _finalize(args):
     report = gate(_load(args.run), proposals)
     write(args.run / "report.json", jsonify(report))
     write(args.run / "report.md", markdown(report))
-    escalate = escalations(report) if proposals else set()
+    # A pair already answered by the strong model is final; re-escalating it would loop.
+    answered = {p["pair_id"] for p in proposals if p.get("escalated")}
+    escalate = escalations(report) - answered if proposals else set()
     summary = {
         "report": str(args.run / "report.md"),
         "json": str(args.run / "report.json"),
@@ -279,6 +289,7 @@ def _finalize(args):
         "structure_issues": len(report.get("structure", [])),
         "quote_validation_failures": sum(bool(c["gate_issues"]) for c in report["claims"]),
         "not_assessed": sum(c["verdict"] == "not_assessed" for c in report["claims"]),
+        "escalated_answers": len(answered),
     }
     if escalate:
         shards = make_shards(args.run, size=args.escalate_size, only=escalate, name="escalate")
@@ -301,7 +312,12 @@ def main(argv=None):
     prep.add_argument("--out", type=Path, required=True)
     prep.add_argument("--bib", type=Path, action="append", default=[])
     prep.add_argument("--indices", choices=tuple(INDEX_NAMES), nargs="+", default=list(INDEX_NAMES))
-    prep.add_argument("--cache", type=Path, help="cache path shared with another audit")
+    prep.add_argument(
+        "--cache", type=Path, help="HTTP cache folder (default ~/.cache/cite-checker)"
+    )
+    prep.add_argument(
+        "--cache-days", type=numbered, default=30, help="refetch cached answers older than this"
+    )
     prep.add_argument("--mailto", type=_email, help="optional scholarly API contact email")
     prep.add_argument("--top", type=numbered, default=5)
     prep.add_argument("--abstract-only", action="store_true")
@@ -352,9 +368,24 @@ def main(argv=None):
     judge.add_argument("--pattern", default="shard-*.json", help="e.g. escalate-*.json")
     judge.add_argument("--price-in", type=float, default=0.0, help="USD per million input tokens")
     judge.add_argument("--price-out", type=float, default=0.0, help="USD per million output tokens")
+    judge.add_argument(
+        "--structured",
+        action="store_true",
+        help="ask for direction, numbers and clause checks; the verdict is derived in Python",
+    )
+    judge.add_argument(
+        "--votes", type=numbered, default=1, help="judge each shard N times and take the majority"
+    )
     judge.set_defaults(
         action=lambda a: run_shards(
-            a.run, a.runner, a.jobs, pattern=a.pattern, price_in=a.price_in, price_out=a.price_out
+            a.run,
+            a.runner,
+            a.jobs,
+            pattern=a.pattern,
+            price_in=a.price_in,
+            price_out=a.price_out,
+            structured=a.structured,
+            votes=a.votes,
         )
     )
     finalize = commands.add_parser("finalize", help="validate proposed quotes and write a report")

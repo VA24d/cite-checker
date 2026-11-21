@@ -249,6 +249,8 @@ def gate(run, proposals):
                 "verdict": verdict,
                 "reason": reason,
                 "proposed_verdict": proposal["verdict"] if proposal else None,
+                "caveat": str((proposal or {}).get("caveat") or "").strip(),
+                "split": bool((proposal or {}).get("split")),
                 "source": pair["source"],
                 "evidence": evidence,
                 "gate_issues": issues,

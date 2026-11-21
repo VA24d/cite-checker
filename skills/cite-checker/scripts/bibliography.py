@@ -303,6 +303,118 @@ def _from_parsed_paper(data):
     return [reference(row) for row in data["bibliography"]], claims
 
 
+TEX_INPUT = re.compile(r"\\(?:input|include|subfile)\s*\{([^{}]+)\}")
+TEX_DEFINE = re.compile(r"\\(?:(?:new|renew|provide)command\*?|def)\s*(?:\{\s*)?\\([A-Za-z@]+)\s*\}?\s*(?:\[(\d)\])?\s*(?:\[[^\]]*\])?\s*(?=\{)")
+TEX_LAYOUT = re.compile(r"\\(?:par|vspace|hspace|fbox|fcolorbox|colorbox|parbox|framebox|begin|noindent|centering)(?![A-Za-z])")
+TEX_UNWRAP = re.compile(
+    r"\\(?:emph|textbf|textit|texttt|textsc|textrm|textsf|mbox|hbox|url|nolinkurl|"
+    r"textnormal|underline|path)\s*\{((?:[^{}]|\{[^{}]*\})*)\}"
+)
+TEX_HEADING = re.compile(
+    r"\\(?:part|chapter|section|subsection|subsubsection|paragraph|subparagraph|caption)"
+    r"\*?\s*(?:\[[^\]]*\])?\s*\{((?:[^{}]|\{[^{}]*\})*)\}"
+)
+
+
+def _tex_uncomment(text):
+    return re.sub(r"(?m)(?<!\\)%[^\n]*", "", text)
+
+
+def _tex_inline(body, folder, depth=0):
+    """Replace \\input and \\include with the files' text, so claims and macros defined
+    in included files are seen. Only files inside the manuscript folder are read."""
+    body = _tex_uncomment(body)
+    if depth > 4:
+        return body
+
+    def include(match):
+        name = match[1].strip()
+        target = (folder / name).resolve()
+        if target.suffix != ".tex":
+            target = target.with_name(target.name + ".tex")
+        if not target.is_file() or folder.resolve() not in target.parents:
+            return match[0]
+        return _tex_inline(target.read_text(encoding="utf-8", errors="replace"), folder, depth + 1)
+
+    return TEX_INPUT.sub(include, body)
+
+
+def _tex_group(text, start):
+    """Return (content, end) of the balanced {...} group that opens at text[start]."""
+    depth, i = 0, start
+    while i < len(text):
+        char = text[i]
+        if char == "\\":
+            i += 2
+            continue
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start + 1 : i], i + 1
+        i += 1
+    return text[start + 1 :], len(text)
+
+
+def _tex_args(text, start, count):
+    args, i = [], start
+    for _ in range(count):
+        while i < len(text) and text[i] in " \t\n":
+            i += 1
+        if i >= len(text) or text[i] != "{":
+            return None, start
+        arg, i = _tex_group(text, i)
+        args.append(arg)
+    return args, i
+
+
+def _tex_plain(body):
+    """Expand macros defined in the manuscript (often generated numbers) and strip
+    markup a reader never sees, so claims read as the PDF does."""
+    macros, kept, last = {}, [], 0
+    for m in TEX_DEFINE.finditer(body):
+        if m.start() < last:
+            continue
+        value, end = _tex_group(body, m.end())
+        macros[m[1]] = (int(m[2] or 0), value)
+        kept.append(body[last : m.start()])
+        last = end
+    body = "".join(kept) + body[last:]
+    if macros:
+        names = "|".join(map(re.escape, sorted(macros, key=len, reverse=True)))
+        pattern = re.compile(r"\\(" + names + r")(?![A-Za-z@])[ \t]?(?:\{\})?")
+        for _ in range(4):
+            out, i, changed = [], 0, False
+            for m in pattern.finditer(body):
+                if m.start() < i:
+                    continue
+                count, value = macros[m[1]]
+                args, end = _tex_args(body, m.end(), count) if count else ([], m.end())
+                if args is None:
+                    continue
+                if count and TEX_LAYOUT.search(value):
+                    value = " ".join(args)  # a display wrapper: keep only its text
+                else:
+                    for n, arg in enumerate(args, 1):
+                        value = value.replace(f"#{n}", arg)
+                out += [body[i : m.start()], value, " "]
+                i, changed = end, True
+            body = "".join(out) + body[i:]
+            if not changed:
+                break
+    body = TEX_HEADING.sub(lambda m: "\n\n" + m[1] + ".\n\n", body)
+    body = re.sub(r"\\label\s*\{[^{}]*\}", "", body)
+    for _ in range(3):
+        body = TEX_UNWRAP.sub(lambda m: m[1], body)
+    for raw, plain in (("~", " "), ("\\%", "%"), ("\\&", "&"), ("\\#", "#"), ("\\xspace", " "),
+                       ("\\ ", " ")):
+        body = body.replace(raw, plain)
+    body = re.sub(r"\\textquotesingle(?![A-Za-z])\s?", "'", body)
+    body = re.sub(r"[ \t]+", " ", body)
+    return re.sub(r" +([.,;:!?)])", r"\1", body)
+
+
 def _relative_bibs(body, path):
     paths = []
     for match in re.finditer(r"\\(?:bibliography|addbibresource)(?:\[[^\]]*\])?\{([^{}]+)\}", body):
@@ -337,10 +449,11 @@ def read_input(path, bibs):
         if heading:
             refs = _numbered(text[heading.end() :])
         if suffix == ".tex":
-            body = re.sub(r"(?m)(?<!\\)%[^\n]*", "", body)
+            body = _tex_inline(body, path.parent)
             bibs = list(dict.fromkeys([*bibs, *_relative_bibs(body, path)]))
             inline_refs, body = _latex_refs(body)
             refs.extend(inline_refs)
+            body = _tex_plain(body)
         claims = _mentions(body, latex=suffix == ".tex")
         notices.append(
             "Automatic citation mapping is heuristic. Check coverage against the manuscript."

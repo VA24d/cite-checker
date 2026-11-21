@@ -15,6 +15,8 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 RULES = Path(__file__).resolve().parent.parent / "references" / "judging.md"
+STRUCTURED_RULES = RULES.with_name("judging-structured.md")
+from collections import Counter  # noqa: E402
 NUMBER = re.compile(r"(?<![\w.])\d+(?:[.,]\d+)?\s?%?")
 
 
@@ -27,7 +29,8 @@ def _load(run):
 def _cite(ref):
     data = ref.get("source") or ref.get("reference") or {}
     authors = data.get("authors") or []
-    first = authors[0].split(",")[0].split()[-1] if authors else ""
+    parts = authors[0].split(",")[0].split() if authors else []
+    first = parts[-1] if parts else ""
     years = data.get("years") or ([data["year"]] if data.get("year") else [""])
     year = years[0]
     title = (data.get("title") or "")[:90]
@@ -102,8 +105,58 @@ def make_shards(run, size=8, top=3, only=None, name="shard"):
     }
 
 
-def prompt_for(shard_path, run):
-    rules = RULES.read_text(encoding="utf-8")
+def derive_verdict(row):
+    """Turn structured answers (direction, numbers, extra clauses) into a verdict.
+
+    Small models extract these fields about as well as large ones; the verdict rules are
+    where they diverge, so the rules live here instead of in the prompt."""
+    if row.get("verdict") in ("supported", "partially_supported", "contradicted", "insufficient"):
+        return row
+    direction = str(row.get("direction", "none")).lower()
+    numbers = str(row.get("numbers", "n/a")).lower()
+    extras = row.get("extra_clauses") or {}
+    unsupported = [k for k, v in extras.items() if v is False or str(v).lower() == "false"]
+    if not row.get("quotes"):
+        verdict = "insufficient"
+    elif direction == "opposite" or numbers == "mismatch":
+        verdict = "contradicted"
+    elif direction == "same" and numbers in ("match", "n/a") and not unsupported:
+        verdict = "supported"
+    elif direction == "same":
+        verdict = "partially_supported"
+    else:
+        verdict = "insufficient"
+    reason = str(row.get("reason") or "").strip() or f"Direction {direction}, numbers {numbers}."
+    if unsupported and verdict == "partially_supported":
+        reason += " Unsupported: " + "; ".join(map(str, unsupported)) + "."
+    return {**row, "verdict": verdict, "reason": reason}
+
+
+def vote(answers):
+    """Majority verdict over several runs of the same shard. A pair whose winning verdict
+    has no strict majority is marked `split` so finalize escalates it."""
+    by_pair = {}
+    for rows in answers:
+        for row in rows:
+            by_pair.setdefault(row["pair_id"], []).append(derive_verdict(row))
+    merged = []
+    for pair_id, rows in by_pair.items():
+        counts = Counter(r["verdict"] for r in rows)
+        (winner, top), = counts.most_common(1)
+        tied = sum(1 for c in counts.values() if c == top) > 1
+        chosen = next(r for r in rows if r["verdict"] == winner)
+        merged.append(
+            {
+                **chosen,
+                "votes": dict(counts),
+                "split": tied or top * 2 <= len(answers),
+            }
+        )
+    return merged
+
+
+def prompt_for(shard_path, run, structured=False):
+    rules = (STRUCTURED_RULES if structured else RULES).read_text(encoding="utf-8")
     shard = Path(shard_path).read_text(encoding="utf-8")
     return (
         f"{rules}\n\nRun directory: {run}\n"
@@ -135,6 +188,8 @@ def run_shards(
     price_in=0.0,
     price_out=0.0,
     backoff=30,
+    structured=False,
+    votes=1,
 ):
     """Judge every shard with an external CLI, e.g. `claude -p --model haiku` or
     `agy --sandbox --mode plan --model gemini-3.8-flash-high --dangerously-skip-permissions -p`.
@@ -151,8 +206,22 @@ def run_shards(
         if target.exists():
             return path.name, "cached"
         ids = {p["id"] for p in json.loads(path.read_text(encoding="utf-8"))["pairs"]}
+        prompt = prompt_for(path, run, structured)
+        answers, error = [], ""
+        for _ in range(votes):
+            rows, error = ask(path, ids, prompt)
+            if rows:
+                answers.append(rows)
+        if not answers:
+            return path.name, f"failed: {error}"
+        rows = vote(answers) if (votes > 1 or structured) else answers[0]
+        target.write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")
+        missing = len(ids) - len({r["pair_id"] for r in rows})
+        note = f", {len(answers)}/{votes} votes" if votes > 1 else ""
+        return path.name, ("ok" if not missing else f"ok, {missing} pairs unanswered") + note
+
+    def ask(path, ids, prompt):
         error = ""
-        prompt = prompt_for(path, run)
         for attempt in range(retries + 1):
             started = time.monotonic()
             try:
@@ -180,10 +249,8 @@ def run_shards(
                 if attempt < retries:
                     time.sleep(backoff * (attempt + 1))
                 continue
-            target.write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")
-            missing = len(ids) - len({r["pair_id"] for r in rows})
-            return path.name, "ok" if not missing else f"ok, {missing} pairs unanswered"
-        return path.name, f"failed: {error}"
+            return rows, ""
+        return None, error
 
     with ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
         results = dict(pool.map(one, shards))
@@ -212,11 +279,12 @@ def collect_assessments(paths):
     """Merge assessment arrays from files or folders. Later files override earlier ones,
     so an escalated re-judgment replaces the cheap model's answer."""
     files = []
-    for path in paths:
-        path = Path(path)
-        found = path.glob("*.json") if path.is_dir() else [path]
-        # Escalated answers sort last so they replace the first pass.
-        files.extend(sorted(found, key=lambda f: (f.name.startswith("escalate"), f.name)))
+    for order, path in enumerate(map(Path, paths)):
+        found = sorted(path.glob("*.json")) if path.is_dir() else [path]
+        files.extend((order, f) for f in found)
+    # Escalated answers apply last, whichever folder they came from, so they replace the
+    # first pass; otherwise later arguments override earlier ones.
+    files = [f for _, f in sorted(files, key=lambda t: (t[1].name.startswith("escalate"), t[0], t[1].name))]
     merged = {}
     for file in files:
         rows = json.loads(file.read_text(encoding="utf-8"))
@@ -224,17 +292,37 @@ def collect_assessments(paths):
             raise ValueError(f"{file}: assessments JSON must be an array")
         for row in rows:
             if isinstance(row, dict) and "pair_id" in row:
+                row = derive_verdict(row)
+                if file.name.startswith("escalate"):
+                    row["escalated"] = True
                 merged[row["pair_id"]] = row
     return list(merged.values())
 
 
+# Claims whose truth turns on a number, a direction or a negation. An `insufficient` call
+# on such a claim, with source text present, is the cheap model's most common miss.
+DECISIVE_CLAIM = re.compile(
+    r"\d|%|\b(?:increase[sd]?|decrease[sd]?|reduc\w*|rais\w*|lower\w*|higher|greater|"
+    r"less|more|fewer|improv\w*|worsen\w*|promot\w*|inhibit\w*|prevent\w*|caus\w*|"
+    r"associat\w*|correlat\w*|no|not|never|without|fail\w*|unable)\b",
+    re.I,
+)
+
+
 def escalations(report):
-    """Pairs a stronger model should re-judge: failed quote gates and decisive negatives."""
+    """Pairs a stronger model should re-judge: failed quote gates, decisive negatives, and
+    `insufficient` calls on claims that state a number, direction or negation."""
     return {
         c["pair_id"]
         for c in report["claims"]
         if c["gate_issues"]
         or c["proposed_verdict"] in ("contradicted", "partially_supported")
         or c["verdict"] == "not_assessed"
+        or c.get("split")
+        or (
+            c["proposed_verdict"] == "insufficient"
+            and c["source"] is not None
+            and DECISIVE_CLAIM.search(c["claim"])
+        )
     }
 

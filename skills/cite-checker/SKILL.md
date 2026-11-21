@@ -13,7 +13,7 @@ Reference checks are deterministic Python. Only claim support needs a model, and
 python "<skill>/scripts/cite_checker.py" prepare "<input>" --out "<new-run-dir>"
 ```
 
-Options: `--bib FILE` (repeatable), `--references-only`, `--local-only` (closed book, supplied text only), `--offline --cache PATH` (replay), `--no-web` (skip cited web pages), `--workers N` (parallel lookups, default 8). If the parser misses claims or the user gives claims and sources in chat, write a manifest as in [formats](references/formats.md).
+Options: `--bib FILE` (repeatable), `--references-only`, `--local-only` (closed book, supplied text only), `--offline --cache PATH` (replay), `--no-web` (skip cited web pages), `--workers N` (parallel lookups, default 8), `--cache DIR` and `--cache-days N` (shared HTTP cache, default `~/.cache/cite-checker`, refreshed after 30 days). If the parser misses claims or the user gives claims and sources in chat, write a manifest as in [formats](references/formats.md).
 
 The command prints a summary. Report from it and from `report.md` later. Do not open `packet.json` or `sources.json` into context: they are large and the scripts read them for you.
 
@@ -43,7 +43,7 @@ Never send manuscript claims to an external model or search service without the 
 python "<skill>/scripts/cite_checker.py" finalize "<run-dir>" --assessments "<run-dir>/assessments"
 ```
 
-Quotes are validated against the frozen source text. A decisive verdict without a verbatim quote becomes `insufficient`. If the summary has `escalate`, it lists `escalate-NN.json` shards: failed quotes and every `contradicted` or `partially_supported` call. Re-judge only those with a stronger model (yourself, or `judge --pattern "escalate-*.json"` with a stronger runner), save answers as `<run-dir>/assessments/escalate-NN.json`, and finalize again. Escalated answers replace first-pass ones.
+Quotes are validated against the frozen source text. A decisive verdict without a verbatim quote becomes `insufficient`. If the summary has `escalate`, it lists `escalate-NN.json` shards: failed quotes, every `contradicted` or `partially_supported` call, and `insufficient` calls on claims with a number, direction or negation. Re-judge only those with the strongest model available (yourself, or `judge --pattern "escalate-*.json" --runner "claude -p --model opus"`), save answers as `<run-dir>/assessments/escalate-NN.json`, and finalize again. Escalated answers replace first-pass ones.
 
 ## 4. Report
 
