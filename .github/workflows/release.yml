@@ -1,0 +1,31 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Tag must match plugin version
+        run: python package.py --check --tag "${GITHUB_REF_NAME}"
+      - name: Tests
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m pytest -n auto -q -p no:testmon
+      - name: Build archives
+        run: python package.py
+      - name: Release notes from CHANGELOG.md
+        run: python package.py --notes "${GITHUB_REF_NAME}" > notes.md
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" dist/*.zip --title "cite-checker ${GITHUB_REF_NAME}" --notes-file notes.md

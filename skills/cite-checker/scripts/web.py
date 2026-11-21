@@ -214,6 +214,34 @@ def github_repo(url):
     return None
 
 
+PULL = re.compile(r"^/([\w.-]+)/([\w.-]+)/pull/(\d+)")
+
+
+def _pull_request_changes(url, transport, limit=40_000):
+    """A cited pull request's claims are usually about its code change, which the PR page
+    does not show. Append the changed lines from the GitHub API."""
+    parts = urlsplit(url)
+    match = PULL.match(parts.path)
+    if (parts.hostname or "").lower() not in ("github.com", "www.github.com") or not match:
+        return ""
+    api = f"https://api.github.com/repos/{match[1]}/{match[2]}/pulls/{match[3]}/files?per_page=100"
+    try:
+        status, body = transport.get(api, limit=5_000_000, web=True)
+        files = json.loads(body) if status == 200 else []
+    except (OSError, ValueError):
+        return ""
+    lines = ["", "", "Changed lines in this pull request:"]
+    for item in files if isinstance(files, list) else []:
+        changed = [
+            line for line in str(item.get("patch") or "").splitlines()
+            if line[:1] in "+-" and not line.startswith(("+++", "---"))
+        ]
+        if changed:
+            lines += ["", f"File {item.get('filename', '')}:", *changed]
+    text = "\n".join(lines)
+    return text[:limit] if len(lines) > 3 else ""
+
+
 def cff_advisory(ref, cff):
     target = cff.get("preferred") or cff.get("software")
     if not target:
@@ -386,7 +414,7 @@ def check_web(ref, transport):
     source = None
     if len(page["text"]) >= 200:
         source = {
-            "text": page["text"],
+            "text": page["text"] + _pull_request_changes(url, transport),
             "level": "full_text",
             "url": fetched_from,
             "origin": "archived web page" if fetched_from != url else "web page",

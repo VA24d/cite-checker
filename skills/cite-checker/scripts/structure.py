@@ -148,3 +148,60 @@ def check(refs, claims, resolutions=None, manuscript=False):
             )
         )
     return issues
+
+
+# A year used as a date in a claim: "in 2019", "since 2021", "March 2026", "as of 2024".
+CLAIM_YEAR = re.compile(
+    r"\b(?:in|during|since|from|after|until|by|as of|throughout|early|mid|late|"
+    r"January|February|March|April|May|June|July|August|September|October|November|December)"
+    r"\s+((?:19|20)\d{2})\b",
+    re.I,
+)
+
+
+def _published(ref, resolution):
+    years = list(((resolution or {}).get("source") or {}).get("years") or [])
+    if ref.get("year"):
+        years.append(ref["year"])
+    return max(years) if years else None
+
+
+def date_checks(refs, claims, resolutions, today):
+    """Dates a reader can check without judgment: a claim about events after the cited
+    work appeared, and access dates in the future or before the page existed."""
+    issues = []
+    by_id = {r["id"]: r for r in refs}
+    for claim in claims:
+        years = {int(m[1]) for m in CLAIM_YEAR.finditer(claim["text"]) if not m[0].lower().startswith("by ")}
+        for key in claim["references"]:
+            published = _published(by_id.get(key, {}), resolutions.get(key))
+            late = sorted(y for y in years if published and y > published)
+            if late:
+                issues.append(
+                    {
+                        "check": "claim_after_source",
+                        "severity": "warning",
+                        "references": [key],
+                        "claims": [claim["id"]],
+                        "message": f"The claim describes {late[0]}, but {key} appeared in {published}. "
+                        "A source cannot report later events; check the citation.",
+                    }
+                )
+    for ref in refs:
+        accessed = str(ref.get("accessed") or "")
+        match = re.match(r"((?:19|20)\d{2})(?:-(\d{1,2}))?(?:-(\d{1,2}))?", accessed)
+        if not match:
+            continue
+        stamp = "-".join(f"{int(x):02d}" if i else x for i, x in enumerate(match.groups()) if x)
+        if stamp > today[: len(stamp)]:
+            issues.append(
+                {"check": "access_in_future", "severity": "error", "references": [ref["id"]], "claims": [],
+                 "message": f"Access date {accessed} is in the future."}
+            )
+        published = _published(ref, resolutions.get(ref["id"]))
+        if published and int(match[1]) < published:
+            issues.append(
+                {"check": "access_before_publication", "severity": "warning", "references": [ref["id"]],
+                 "claims": [], "message": f"Access date {accessed} is before the work's date ({published})."}
+            )
+    return issues

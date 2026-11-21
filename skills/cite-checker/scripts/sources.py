@@ -32,6 +32,10 @@ SEMANTIC_FIELDS = "title,authors,year,venue,publicationVenue,journal,externalIds
 SEMANTIC_BATCH = "https://api.semanticscholar.org/graph/v1/paper/batch"
 HANDLES = "https://doi.org/api/handles/"
 DATACITE = "https://api.datacite.org/dois/"
+OPENREVIEW = "https://api2.openreview.net/notes/search"
+EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
+UNPAYWALL = "https://api.unpaywall.org/v2/"
+CORE = "https://api.core.ac.uk/v3/search/works"
 HOSTS = {
     "api.crossref.org",
     "api.openalex.org",
@@ -42,6 +46,10 @@ HOSTS = {
     "doi.org",
     "api.datacite.org",
     "archive.org",
+    "api2.openreview.net",
+    "eutils.ncbi.nlm.nih.gov",
+    "api.unpaywall.org",
+    "api.core.ac.uk",
 }
 VOID_TAGS = {
     "area",
@@ -72,7 +80,12 @@ INDEX_NAMES = {
     "europepmc": "Europe PMC",
     "semanticscholar": "Semantic Scholar",
     "datacite": "DataCite",
+    "openreview": "OpenReview",
+    "pubmed": "PubMed",
 }
+# Indices that never count toward the lookup quorum: they add candidates but a
+# successful empty answer from them is not evidence that a work is missing.
+EXTRA_INDICES = {"openreview", "pubmed"}
 VENUES = {
     "international conference on learning representations": "iclr",
     "international conference on machine learning": "icml",
@@ -196,12 +209,23 @@ class Transport:
             headers["x-api-key"] = os.environ["SEMANTIC_SCHOLAR_API_KEY"]
         # Keys travel only with the live request, never in the cache key.
         fetch = url
+        if host == "eutils.ncbi.nlm.nih.gov" and os.environ.get("NCBI_API_KEY"):
+            separator = "&" if urlsplit(url).query else "?"
+            fetch = url + separator + urlencode({"api_key": os.environ["NCBI_API_KEY"]})
+        if host == "api.core.ac.uk" and os.environ.get("CORE_API_KEY"):
+            headers["Authorization"] = "Bearer " + os.environ["CORE_API_KEY"]
         if host == "api.openalex.org" and os.environ.get("OPENALEX_API_KEY"):
             separator = "&" if urlsplit(url).query else "?"
             fetch = url + separator + urlencode({"api_key": os.environ["OPENALEX_API_KEY"]})
         # Pace arXiv's API at its published three-second interval. Semantic Scholar's
         # keyless pool is shared and often returns 429, so back off longer there.
-        delay = {"export.arxiv.org": 3, "api.semanticscholar.org": 1.1}.get(host, 0.15)
+        # NCBI allows 3 requests/s without a key and 10/s with one.
+        ncbi = 0.11 if os.environ.get("NCBI_API_KEY") else 0.35
+        delay = {
+            "export.arxiv.org": 3,
+            "api.semanticscholar.org": 1.1,
+            "eutils.ncbi.nlm.nih.gov": ncbi,
+        }.get(host, 0.15)
         tries = 6 if semantic else 2
         opener = self.web_opener if web else self.opener
         for attempt in range(tries):
@@ -246,9 +270,12 @@ class _Page(HTMLParser):
         self.parts = []
         self.ignored = []
         self.title = ""
+        self.page_title = []  # <title> text, used when there is no citation_title
+        self.in_title = False
 
     def handle_starttag(self, name, attrs):
         values = dict(attrs)
+        self.in_title = name == "title"
         role = (values.get("class") or "") + " " + (values.get("id") or "")
         if name == "meta" and values.get("name") == "citation_title":
             self.title = values.get("content") or ""
@@ -264,10 +291,16 @@ class _Page(HTMLParser):
             self.parts.append(" ")
 
     def handle_endtag(self, name):
+        if name == "title":
+            self.in_title = False
+            if not self.title:
+                self.title = " ".join("".join(self.page_title).split())
         if self.ignored and self.ignored[-1] == name:
             self.ignored.pop()
 
     def handle_data(self, data):
+        if self.in_title:
+            self.page_title.append(data)
         if not self.ignored:
             self.parts.append(data)
 
@@ -477,6 +510,7 @@ def identity(ref, rows, completed, unregistered_doi=False, min_indices=1):
         "venue_aliases": list(dict.fromkeys(v for r in peers for v in r.get("venue_aliases", []))),
         "venue_types": sorted({t for r in peers for t in r.get("venue_types", [])}),
         "retracted": any(r.get("retracted") for r in peers),
+        "notices": _notice_list(r for p in peers for r in p.get("notices", [])),
     }
     source = {**best, **improvements}
     differences = []
@@ -603,6 +637,8 @@ def identity(ref, rows, completed, unregistered_doi=False, min_indices=1):
         )
     if source["retracted"]:
         advisories.append({"kind": "retracted", "message": "An index marks this work retracted."})
+    advisories.extend(_notice_advisories(source.get("notices", [])))
+    advisories.extend(_version_advisory(explicit_arxiv, arxiv_record))
     return dict(
         result,
         status=status,
@@ -685,7 +721,79 @@ def classify(resolution):
 
 
 def _public(row):
-    return {k: v for k, v in row.items() if k not in ("abstract", "pmcid")}
+    return {
+        k: v for k, v in row.items() if k not in ("abstract", "pmcid", "notices", "oa_pdf")
+    }
+
+
+NOTICE_KINDS = {
+    "correction": "correction",
+    "corrigendum": "correction",
+    "erratum": "erratum",
+    "expression_of_concern": "expression_of_concern",
+    "retraction": "retraction",
+}
+
+
+def _notice_list(entries):
+    seen, out = set(), []
+    for entry in entries:
+        key = (entry["kind"], entry.get("doi", ""), entry.get("date", ""))
+        if key not in seen:
+            seen.add(key)
+            out.append(entry)
+    return out
+
+
+def _crossref_notices(item):
+    """Notices from Crossref's updated-by list (editorial updates to this work)."""
+    found = []
+    for entry in item.get("updated-by") or []:
+        kind = NOTICE_KINDS.get(str(entry.get("type") or "").lower().replace("-", "_"))
+        if not kind:
+            continue
+        parts = (entry.get("updated") or {}).get("date-parts", [[]])[0] or []
+        date = "-".join(f"{int(n):02d}" if i else str(n) for i, n in enumerate(parts[:3]))
+        found.append({"kind": kind, "doi": doi_of(entry.get("DOI")), "date": date})
+    return found
+
+
+def _notice_advisories(notices):
+    labels = {
+        "correction": "A correction notice is attached to this work.",
+        "erratum": "An erratum is attached to this work.",
+        "expression_of_concern": "An expression of concern is attached to this work.",
+        "retraction": "A retraction notice is attached to this work.",
+    }
+    return [
+        {
+            "kind": n["kind"],
+            "message": labels[n["kind"]],
+            "doi": n.get("doi", ""),
+            "date": n.get("date", ""),
+        }
+        for n in notices
+    ]
+
+
+def _version_number(value):
+    match = re.search(r"v(\d+)$", value or "")
+    return int(match[1]) if match else None
+
+
+def _version_advisory(requested, record):
+    record = record or {}
+    newest = record.get("latest_arxiv") or record.get("arxiv_id")
+    pinned, latest = _version_number(requested), _version_number(newest)
+    if pinned and latest and latest > pinned and _arxiv_base(requested) == _arxiv_base(newest):
+        return [
+            {
+                "kind": "newer_version",
+                "message": f"The cited arXiv version v{pinned} has a newer version (v{latest}); check that the claims still hold in it.",
+                "latest": newest,
+            }
+        ]
+    return []
 
 
 def _crossref(item):
@@ -709,6 +817,7 @@ def _crossref(item):
         "venues": item.get("container-title") or [],
         "abstract": plain(item.get("abstract")),
         "retracted": retraction,
+        "notices": _crossref_notices(item),
     }
 
 
@@ -768,6 +877,7 @@ def _openalex(item):
         "venues": names,
         "abstract": " ".join(token for _, token in sequence),
         "open_access_url": oa.get("landing_page_url") or oa.get("pdf_url"),
+        "oa_pdf": oa.get("pdf_url") or (item.get("open_access") or {}).get("oa_url") or "",
         "retracted": bool(item.get("is_retracted")),
         "pmid": str(ids.get("pmid") or "").rsplit("/", 1)[-1],
     }
@@ -816,6 +926,86 @@ def _epmc(item):
             re.search(r"Retracted Publication", str(item.get("pubTypeList", {})), re.I)
         ),
     }
+
+
+def _openreview(note):
+    def field(name):
+        value = (note.get("content") or {}).get(name)
+        return value.get("value") if isinstance(value, dict) else value
+
+    venue = field("venue") or ""
+    venueid = field("venueid") or ""
+    year = _year(venue) or _year(venueid)
+    if not year and note.get("pdate"):
+        year = _year(time.strftime("%Y", time.gmtime(note["pdate"] / 1000)))
+    ident = note.get("forum") or note.get("id") or ""
+    authors = field("authors")
+    return {
+        "index": "OpenReview",
+        "title": plain(field("title") or ""),
+        "authors": [a for a in authors if isinstance(a, str)] if isinstance(authors, list) else [],
+        "doi": doi_of(field("doi")) if field("doi") else "",
+        "url": f"https://openreview.net/forum?id={ident}" if ident else "",
+        "years": [year] if year else [],
+        "venues": [venue] if venue else ([venueid] if venueid else []),
+        "abstract": plain(field("abstract") or ""),
+        "retracted": False,
+    }
+
+
+def _pubmed(item):
+    ids = {a.get("idtype"): a.get("value") for a in item.get("articleids") or []}
+    pmid = str(ids.get("pubmed") or item.get("uid") or "")
+    pmcid = ids.get("pmc") or ""
+    authors = [a["name"] for a in item.get("authors") or [] if a.get("name")]
+    journal = item.get("fulljournalname") or item.get("source") or ""
+    return {
+        "index": "PubMed",
+        "title": plain(item.get("title") or "").rstrip("."),
+        "authors": authors,
+        "doi": doi_of(ids.get("doi")) if ids.get("doi") else "",
+        "url": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/" if pmid else "",
+        "years": [y] if (y := _year(item.get("pubdate"))) else [],
+        "venues": [journal] if journal else [],
+        "pmid": pmid,
+        "pmcid": pmcid,
+        "retracted": bool(
+            re.search(r"retract", " ".join(map(str, item.get("pubtype") or [])), re.I)
+        ),
+    }
+
+
+def _pubmed_search(title, transport, attempts):
+    phrase = " ".join(words(title))
+    if not phrase:
+        return []
+    url = EUTILS + "/esearch.fcgi?" + urlencode(
+        {"db": "pubmed", "retmode": "json", "retmax": 5, "term": phrase + "[Title]"}
+    )
+    status, content = transport.get(url)
+    attempts.append({"index": "PubMed", "mode": "search", "http_status": status or None})
+    if status != 200:
+        return None
+    try:
+        ids = [str(i) for i in json.loads(content)["esearchresult"]["idlist"]]
+    except (ValueError, KeyError, TypeError):
+        attempts[-1]["response"] = "invalid"
+        return None
+    if not ids:
+        return []
+    url = EUTILS + "/esummary.fcgi?" + urlencode(
+        {"db": "pubmed", "retmode": "json", "id": ",".join(ids)}
+    )
+    status, content = transport.get(url)
+    attempts.append({"index": "PubMed", "mode": "summary", "http_status": status or None})
+    if status != 200:
+        return None
+    try:
+        result = json.loads(content)["result"]
+        return [_pubmed(result[i]) for i in result.get("uids", ids) if isinstance(result.get(i), dict)]
+    except (ValueError, KeyError, TypeError, AttributeError):
+        attempts[-1]["response"] = "invalid"
+        return None
 
 
 def _atom(content):
@@ -923,6 +1113,28 @@ def prefetch_semantic(refs, transport, batch=400):
     return found
 
 
+def _latest_arxiv(pinned, rows, transport, attempts):
+    """arXiv answers a versioned id with that version only; ask for the bare id to
+    learn the newest version and record it on the matching row."""
+    targets = [r for r in rows if r.get("arxiv_id") == pinned and r.get("index") == "arXiv"]
+    if not targets:
+        return
+    url = ARXIV + "?" + urlencode({"id_list": _arxiv_base(pinned)})
+    status, content = transport.get(url)
+    attempts.append({"index": "arXiv", "mode": "latest_version", "http_status": status or None})
+    if status != 200:
+        return
+    try:
+        newest = next(
+            (r["arxiv_id"] for r in _atom(content) if _version_number(r["arxiv_id"])), ""
+        )
+    except ET.ParseError:
+        return
+    if newest and _arxiv_base(newest) == _arxiv_base(pinned):
+        for row in targets:
+            row["latest_arxiv"] = newest
+
+
 def lookup(ref, transport, indices, want_text=False):
     rows, attempts, completed = [], [], []
     doi, arxiv, title = (ref.get(k) for k in ("doi", "arxiv_id", "title"))
@@ -977,6 +1189,12 @@ def lookup(ref, transport, indices, want_text=False):
         params = urlencode({"query": title, "fields": SEMANTIC_FIELDS})
         routes.append(("semanticscholar", SEMANTIC + "?" + params, "venue"))
 
+    if title and "openreview" in indices:
+        params = urlencode({"term": title, "limit": 5, "source": "forum"})
+        routes.append(("openreview", OPENREVIEW + "?" + params, "search"))
+    if title and "pubmed" in indices:
+        routes.append(("pubmed", "", "search"))
+
     for index, url, mode in routes:
         found_exact = any(_scores(ref, row)[0] for row in rows)
         if mode == "search" and found_exact:
@@ -992,9 +1210,14 @@ def lookup(ref, transport, indices, want_text=False):
                     {"index": INDEX_NAMES[index], "mode": mode, "http_status": 200, "batch": True}
                 )
                 continue
+        if index == "pubmed":
+            found = _pubmed_search(title, transport, attempts)
+            if found is not None:
+                rows.extend(found)
+            continue
         status, content = transport.get(url)
         attempts.append({"index": INDEX_NAMES[index], "mode": mode, "http_status": status or None})
-        if status == 404:
+        if status == 404 and index not in EXTRA_INDICES:
             completed.append(INDEX_NAMES[index])
         if status != 200:
             continue
@@ -1018,13 +1241,18 @@ def lookup(ref, transport, indices, want_text=False):
                     found = [_semantic(item) for item in data["data"]]
                 elif index == "datacite":
                     found = [_datacite(data["data"])]
+                elif index == "openreview":
+                    found = [_openreview(n) for n in data["notes"] if n.get("content")]
                 else:
                     found = [_epmc(item) for item in data["resultList"]["result"]]
         except (ValueError, KeyError, TypeError, IndexError, AttributeError, ET.ParseError):
             attempts[-1]["response"] = "invalid"
             continue
         rows.extend(found)
-        completed.append(INDEX_NAMES[index])
+        if index not in EXTRA_INDICES:
+            completed.append(INDEX_NAMES[index])
+    if arxiv and _version_number(arxiv) and "arxiv" in indices:
+        _latest_arxiv(arxiv, rows, transport, attempts)
     exact = [a["http_status"] for a in attempts if a["mode"] == "exact" and a["index"] != "arXiv"]
     unregistered = False
     if doi and exact and all(status == 404 for status in exact):
@@ -1097,6 +1325,64 @@ def _arxiv_text(record, transport):
     return {"text": body, "level": "full_text", "url": url, "origin": "arXiv PDF"}
 
 
+def _pdf_text(url, record, transport, origin, web=True):
+    try:
+        status, content = transport.get(url, limit=30_000_000, web=web)
+    except ValueError:
+        return None
+    if status != 200 or not content.startswith(b"%PDF-"):
+        return None
+    with TemporaryDirectory() as directory:
+        path = Path(directory) / "paper.pdf"
+        path.write_bytes(content)
+        try:
+            body = local_text(path)
+        except (ValueError, OSError, subprocess.SubprocessError):
+            return None
+    if references := REF_HEADING.search(body):
+        body = body[: references.start()]
+    if len(body.strip()) < 1000 or _title(record["title"]) not in _title(body[:8000]):
+        return None
+    return {"text": body, "level": "full_text", "url": url, "origin": origin}
+
+
+def _oa_text(matching, transport):
+    """Open-access PDF full text: OpenAlex location, then Unpaywall (only with a
+    mailto address) and CORE (only with CORE_API_KEY)."""
+    for row in matching:
+        if row.get("oa_pdf") and (
+            source := _pdf_text(row["oa_pdf"], row, transport, "Open access PDF")
+        ):
+            return source
+    for row in matching:
+        doi = row.get("doi")
+        if not doi or not row.get("title"):
+            continue
+        email = getattr(transport, "email", None)
+        if email:
+            url = UNPAYWALL + quote(doi, safe="/") + "?" + urlencode({"email": email})
+            status, content = transport.get(url)
+            try:
+                location = (json.loads(content).get("best_oa_location") or {}) if status == 200 else {}
+            except (ValueError, AttributeError):
+                location = {}
+            if location.get("url_for_pdf") and (
+                source := _pdf_text(location["url_for_pdf"], row, transport, "Open access PDF")
+            ):
+                return source
+        if os.environ.get("CORE_API_KEY"):
+            url = CORE + "?" + urlencode({"q": f'doi:"{doi}"', "limit": 1})
+            status, content = transport.get(url)
+            try:
+                results = json.loads(content).get("results") or [] if status == 200 else []
+            except (ValueError, AttributeError):
+                results = []
+            link = results[0].get("downloadUrl") if results and isinstance(results[0], dict) else ""
+            if link and (source := _pdf_text(link, row, transport, "Open access PDF")):
+                return source
+    return None
+
+
 def get_source(ref, resolution, rows, transport, root, abstract_only=False):
     if "text" in ref or "path" in ref:
         if "text" in ref and "path" in ref:
@@ -1126,6 +1412,13 @@ def get_source(ref, resolution, rows, transport, root, abstract_only=False):
     ]
     requested = ref.get("arxiv_id", "")
     pinned = bool(re.search(r"v\d+$", requested))
+    if requested:
+        # The cited arXiv record is the same work even when the index chose the
+        # published version's record, and arXiv holds its full text.
+        matching += [
+            r for r in rows
+            if r not in matching and r.get("arxiv_id") and _arxiv_base(r["arxiv_id"]) == _arxiv_base(requested)
+        ]
     doi = ref.get("doi") or ""
     publication = doi and not doi.startswith("10.48550/arxiv.")
     if publication:
@@ -1165,6 +1458,8 @@ def get_source(ref, resolution, rows, transport, root, abstract_only=False):
                         "url": pmc["url"],
                         "origin": "Europe PMC",
                     }
+    if not abstract_only and (source := _oa_text(matching, transport)):
+        return source
     for match in matching:
         if match.get("abstract"):
             return {

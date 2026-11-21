@@ -253,7 +253,8 @@ class Shards(unittest.TestCase):
             pairs = [json.loads(Path(p).read_text())["pairs"][0] for p in made["shards"]]
             self.assertEqual(set(pairs[0]) - {"hint"}, {"id", "claim", "cite", "level", "p"})
             self.assertIn(
-                {"numbers_absent_from_source": ["91%"]}, [p.get("hint") for p in pairs]
+                {"numbers_absent_from_source": ["91%"], "source_states_other_values": {"91%": ["88%"]}},
+                [p.get("hint") for p in pairs]
             )
             ids = [p["id"] for p in run["pairs"] if p["reference_id"] == "s"]
             answers = folder / "assessments"
@@ -515,3 +516,67 @@ class EscalationLoop(unittest.TestCase):
             shard = json.loads(Path(summary["escalate"]["shards"][0]).read_text())
             self.assertNotIn(pair, json.dumps(shard))
             self.assertEqual(summary["escalated_answers"], 1)
+
+
+class ManuscriptFeatures(unittest.TestCase):
+    def test_cited_clause_and_first_person(self):
+        from scripts.bibliography import _mentions
+
+        text = (
+            "Unpinned URLs (19.6% against 18.6%; odds ratio 1.07, 95% CI 0.50-2.26) show no clear "
+            "difference, and crawls of deployed policies also find risky sources common \\cite{roth}. "
+            "We use AIDev \\cite{li}, a public dataset of 900 pull requests opened by six agents. "
+            "Most websites run third-party code, and the browser trusts it fully \\cite{nik}."
+        )
+        claims = {c["references"][0]: c for c in _mentions(text, latex=True)}
+        self.assertEqual(claims["roth"]["text"], "crawls of deployed policies also find risky sources common")
+        self.assertIn("odds ratio", claims["roth"]["sentence"])
+        self.assertTrue(claims["li"]["first_person"])
+        self.assertIn("six agents", claims["li"]["text"])
+        self.assertNotIn("\\cite", claims["li"]["text"])
+        self.assertTrue(claims["nik"]["text"].startswith("Most websites"))
+
+    def test_secondary_citation_flag(self):
+        from scripts.evidence import _attribution
+
+        text = "Intro. Prior work found that 40% of sites use SRI [12]. We measure CSP. Our crawl found 3% of sites use SRI."
+        start = text.index("40% of sites")
+        self.assertTrue(_attribution(text, start, start + 10))
+        own = text.index("3% of sites")
+        self.assertEqual(_attribution(text, own, own + 10), "")
+
+    def test_date_checks(self):
+        from scripts.structure import date_checks
+
+        refs = [{"id": "a", "year": 2018}, {"id": "w", "accessed": "2027-01-02", "year": 2020}]
+        claims = [{"id": "c1", "text": "In March 2024 attackers took over the domain", "references": ["a"]},
+                  {"id": "c2", "text": "Adoption will be broad by 2030", "references": ["a"]}]
+        checks = [i["check"] for i in date_checks(refs, claims, {}, "2026-11-21")]
+        self.assertEqual(checks, ["claim_after_source", "access_in_future"])
+
+
+class ArxivFullText(unittest.TestCase):
+    def test_cited_arxiv_text_is_used_when_index_picks_published_record(self):
+        from scripts.sources import get_source
+
+        title = "What Breaks When LLMs Code"
+        published = {"index": "Crossref", "title": title, "doi": "10.1145/x", "years": [2026], "authors": []}
+        preprint = {"index": "arXiv", "title": title, "arxiv_id": "2605.30777", "years": [2026], "authors": []}
+        html = f"<html><head><meta name='citation_title' content='{title}'></head><body><p>{'Evasive Repair masks failures. ' * 60}</p></body></html>"
+        transport = FakeTransport({"https://arxiv.org/html/2605.30777": (200, html.encode())})
+        source = get_source({"id": "h", "arxiv_id": "2605.30777", "title": title},
+                            {"status": "verified", "source": published, "differences": []},
+                            [published, preprint], transport, Path("."))
+        self.assertEqual(source["level"], "full_text")
+        self.assertIn("Evasive Repair", source["text"])
+
+
+class PullRequestDiff(unittest.TestCase):
+    def test_pull_request_changes_are_appended(self):
+        from scripts.web import _pull_request_changes
+
+        files = json.dumps([{"filename": "index.html", "patch": "@@ -1 +1 @@\n-old\n+<script src=pako/2.1.0/pako.min.js>"}])
+        transport = FakeTransport({"https://api.github.com/repos/o/r/pulls/33/files": (200, files.encode())})
+        text = _pull_request_changes("https://github.com/o/r/pull/33", transport)
+        self.assertIn("+<script src=pako/2.1.0/pako.min.js>", text)
+        self.assertEqual(_pull_request_changes("https://github.com/o/r/issues/33", transport), "")

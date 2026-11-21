@@ -227,6 +227,43 @@ def _numbers(group):
             yield from (str(i) for i in range(first, last + 1))
 
 
+FIRST_PERSON = re.compile(r"\b(?:we|our|us|ours)\b", re.I)
+# Marks of the authors' own result: first person or reported statistics.
+OWN_RESULT = re.compile(
+    r"\b(?:we|our|us)\b|odds ratio|\b95\s*%\s*CI\b|confidence interval|\bp\s*[<=>]\s*0?\.\d|"
+    r"\bthis (?:paper|study|work)\b",
+    re.I,
+)
+CLAUSE_BREAK = re.compile(r";\s+|,\s+(?=(?:and|but|while|whereas|yet|so|although)\s)|\s+(?=(?:while|whereas)\s)")
+
+
+def _cited_clause(statement):
+    """When a sentence reports the authors' own result and then cites prior work for a
+    final clause ("our rates show no difference, and crawls also find X [5]"), the
+    citation covers the final clause only. Return that clause; otherwise the statement."""
+    # Split only outside parentheses, so "(19.6%; odds ratio 1.07)" stays one piece.
+    parts, depth, last = [], 0, 0
+    for match in re.finditer(r"[()]|" + CLAUSE_BREAK.pattern, statement):
+        if match[0] in "()":
+            depth = max(0, depth + (1 if match[0] == "(" else -1))
+        elif depth == 0:
+            parts.append(statement[last : match.start()])
+            last = match.end()
+    parts.append(statement[last:])
+    if len(parts) < 2:
+        return statement
+    tail = []
+    for part in reversed(parts):
+        if OWN_RESULT.search(part):
+            break
+        tail.insert(0, part)
+    if len(tail) == len(parts) or not tail:
+        return statement
+    clause = ", ".join(tail)
+    clause = re.sub(r"^(?:and|but|while|whereas|yet|so|although)\s+", "", clause, flags=re.I)
+    return clause if len(clause.split()) >= 4 else statement
+
+
 def _mentions(body, latex=False):
     claims = []
     matcher = (
@@ -242,10 +279,19 @@ def _mentions(body, latex=False):
             previous = markers[i - 1].end() if i else 0
             before = piece[previous : marker.start()].strip(" \n.,;")
             statement = before if len(before.split()) >= 3 else piece[: marker.start()].strip()
-            if piece[marker.end() :].strip(" \n.,;") and (
-                not statement or re.search(r"\b(?:in|by|from|according to|see)$", before, re.I)
+            after = piece[marker.end() :].strip(" \n.,;")
+            if after and (
+                not statement
+                or re.search(r"\b(?:in|by|from|according to|see)$", before, re.I)
+                # "We use AIDev [1], a dataset of ...": the appositive describes the source.
+                or (FIRST_PERSON.search(before) and len(before.split()) <= 6
+                    and re.match(r",\s*(?:a|an|the)\b", piece[marker.end() :]))
             ):
                 statement = piece.strip()
+            scoped = _cited_clause(statement)
+            # Keep the whole sentence only when the claim was cut down to one clause.
+            sentence = " ".join(piece.split()) if scoped != statement else ""
+            statement = scoped
             if latex:
                 references = re.split(r"\s*,\s*", marker[1].strip())
             elif numeric := NUMERIC.fullmatch(marker[0]):
@@ -253,11 +299,14 @@ def _mentions(body, latex=False):
             else:
                 references = PANDOC.findall(marker[0])
             if statement and references:
+                text = " ".join(matcher.sub("", statement).replace(" ,", ",").split())
                 claims.append(
                     {
                         "id": f"claim-{len(claims) + 1}",
-                        "text": " ".join(statement.split()),
+                        "text": text,
                         "references": list(dict.fromkeys(references)),
+                        **({"sentence": sentence} if sentence else {}),
+                        **({"first_person": True} if FIRST_PERSON.search(text) else {}),
                     }
                 )
     return claims
@@ -428,7 +477,8 @@ def _relative_bibs(body, path):
     return paths
 
 
-def read_input(path, bibs):
+def read_input(path, bibs, keep=None):
+    """`keep`, if given, receives the plain manuscript body as keep["body"]."""
     suffix = path.suffix.lower()
     text = local_text(path)
     notices = []
@@ -455,6 +505,8 @@ def read_input(path, bibs):
             refs.extend(inline_refs)
             body = _tex_plain(body)
         claims = _mentions(body, latex=suffix == ".tex")
+        if keep is not None:
+            keep["body"] = body
         notices.append(
             "Automatic citation mapping is heuristic. Check coverage against the manuscript."
         )

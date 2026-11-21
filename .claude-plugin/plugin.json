@@ -1,6 +1,6 @@
 {
   "name": "cite-checker",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Deterministic reference checks (phantom, chimeric, wrong metadata, dead links, preferred citation, bibliography structure) plus cheap-model claim-support judging with verbatim quote validation.",
   "keywords": [
     "citations",

@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -28,7 +29,9 @@ from scripts.sources import (
     prefetch_arxiv,
     prefetch_semantic,
 )
+from scripts import numeric, registry
 from scripts.structure import check as structure_check
+from scripts.structure import date_checks
 from scripts.web import check_web, is_web
 
 
@@ -65,7 +68,8 @@ def _prepare(args):
     destination = args.out / "packet.json"
     if destination.exists():
         raise ValueError("packet.json already exists. Choose a fresh output directory.")
-    refs, claims, notices = read_input(args.input, args.bib)
+    kept = {}
+    refs, claims, notices = read_input(args.input, args.bib, keep=kept)
     if args.local_only:
         notices.append("Index lookup was intentionally skipped in local-only mode.")
     if args.references_only:
@@ -130,6 +134,9 @@ def _prepare(args):
     run["structure"] = structure_check(
         refs, claims, resolutions, manuscript=args.input.suffix.lower() != ".bib"
     )
+    run["manuscript_checks"] = _manuscript_checks(
+        args, refs, claims, resolutions, kept.get("body", ""), transport
+    )
     stored_sources = run.pop("sources")
     write(args.out / "sources.json", jsonify(stored_sources))
     write(destination, jsonify(run))
@@ -140,8 +147,62 @@ def _prepare(args):
         "available_sources": len(stored_sources),
         "triage": _triage_counts(run["references"]),
         "structure_issues": len(run["structure"]),
+        "manuscript_checks": _counts(i["check"] for i in run["manuscript_checks"]),
         "coverage_notes": notices,
     }
+
+
+def _manuscript_checks(args, refs, claims, resolutions, body, transport):
+    """Deterministic checks of the manuscript's own statements: dates, numbers the
+    abstract and body state differently, and cited software packages and versions."""
+    issues = date_checks(refs, claims, resolutions, time.strftime("%Y-%m-%d"))
+    if body:
+        latex = args.input.suffix.lower() == ".tex"
+        for finding in numeric.consistency(numeric.abstract_and_body(body, latex)):
+            issues.append(
+                {
+                    "check": finding["kind"],
+                    "severity": "warning",
+                    "references": [],
+                    "claims": [],
+                    "message": _number_message(finding),
+                }
+            )
+    if args.registries and not args.local_only and not args.offline:
+        for found in registry.check_claims(claims, transport):
+            if found["status"] in ("exists", "version_exists") and not found.get("conflict"):
+                continue
+            if found["status"] == "lookup_unavailable":
+                continue
+            package = found["name"] + (f"@{found['version']}" if found.get("version") else "")
+            if found["status"] == "missing" and found.get("asserts_missing"):
+                continue
+            if found["status"] in ("exists", "version_exists"):
+                message = (f"The manuscript says {package} does not exist on {found['ecosystem']}, "
+                           f"but the registry has it (latest {found.get('latest') or 'unknown'}).")
+            elif found["status"] == "version_missing":
+                message = (f"{package}: {found['ecosystem']} has no such version "
+                           f"(latest {found.get('latest') or 'unknown'}).")
+            else:
+                message = f"{package} is not on {found['ecosystem']}."
+            issues.append(
+                {
+                    "check": "package_" + found["status"],
+                    "severity": "error" if found.get("conflict") else "warning",
+                    "references": [],
+                    "claims": [found["id"]],
+                    "message": message,
+                }
+            )
+    return issues
+
+
+def _number_message(finding):
+    where = finding.get("where") or "abstract"
+    if finding["kind"] == "abstract_number_missing":
+        return f"{finding['value']} in the {where} appears nowhere in the body ({finding.get('context', '')})."
+    return (f"{finding['value']} in the {where} is stated elsewhere as {finding.get('other')} "
+            f"({finding.get('context', '')}).")
 
 
 def _triage_counts(references):
@@ -237,6 +298,14 @@ def markdown(report):
                 f"- **{issue['severity']}** {_escape(issue['message'])}"
                 + (f" ({keys})" if keys else "")
             )
+    if report.get("manuscript_checks"):
+        lines.extend(["", "## Manuscript checks", ""])
+        for issue in report["manuscript_checks"]:
+            where = ", ".join(_escape(k) for k in issue.get("references", []) + issue.get("claims", []))
+            lines.append(
+                f"- **{issue['severity']}** {_escape(issue['message'])}"
+                + (f" ({where})" if where else "")
+            )
     if report["claims"]:
         lines.extend(["", "## Claim support"])
     for row in report["claims"]:
@@ -255,6 +324,9 @@ def markdown(report):
         )
         if row.get("caveat"):
             lines.extend(["", f"**Caveat** {_escape(row['caveat'])}"])
+        if row.get("secondary"):
+            lines.extend(["", f"**Secondary citation** The source attributes this to other work "
+                          f"({_escape(row['secondary'])}). Consider citing the original."])
         for e in row["evidence"]:
             url = _url(e["url"])
             source_label = f"{e['origin']} · {e['level'].replace('_', ' ')}"
@@ -319,6 +391,12 @@ def main(argv=None):
         "--cache-days", type=numbered, default=30, help="refetch cached answers older than this"
     )
     prep.add_argument("--mailto", type=_email, help="optional scholarly API contact email")
+    prep.add_argument(
+        "--no-registries",
+        dest="registries",
+        action="store_false",
+        help="skip npm, PyPI, crates.io and GitHub checks of packages named in claims",
+    )
     prep.add_argument("--top", type=numbered, default=5)
     prep.add_argument("--abstract-only", action="store_true")
     prep.add_argument(

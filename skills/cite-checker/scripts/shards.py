@@ -14,6 +14,8 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+from scripts.numeric import compare as number_facts
+
 RULES = Path(__file__).resolve().parent.parent / "references" / "judging.md"
 STRUCTURED_RULES = RULES.with_name("judging-structured.md")
 from collections import Counter  # noqa: E402
@@ -37,11 +39,29 @@ def _cite(ref):
     return " · ".join(str(x) for x in (first, year, title) if x)
 
 
-def _hints(claim, text):
+def _hints(pair, text):
+    claim = pair["claim"]
     numbers = [n.strip() for n in NUMBER.findall(claim)]
     flat = " ".join(text.split())
     absent = [n for n in dict.fromkeys(numbers) if n.rstrip("%").strip() not in flat]
-    return {"numbers_absent_from_source": absent} if absent else {}
+    hint = {}
+    if absent:
+        # Arithmetic is where cheap judges slip, so the script does it: a claim number
+        # missing from the text may still be computed from two source numbers.
+        facts = number_facts(claim, text)["summary"]
+        derived = {d["value"]: d["formula"] for d in facts["derived"]}
+        absent = [n for n in absent if n not in derived]
+        if absent:
+            hint["numbers_absent_from_source"] = absent
+        if derived:
+            hint["numbers_computed_from_source"] = derived
+        if facts["mismatch"]:
+            hint["source_states_other_values"] = {m["value"]: m["source_values"] for m in facts["mismatch"]}
+    if pair.get("sentence"):
+        hint["sentence"] = pair["sentence"]
+    if pair.get("first_person"):
+        hint["first_person"] = True
+    return hint
 
 
 def _merge(passages):
@@ -68,7 +88,7 @@ def compact_pair(pair, refs, sources, top):
         "cite": _cite(refs.get(pair["reference_id"], {})),
         "level": source["level"],
         "p": _merge(passages),
-        **({"hint": h} if (h := _hints(pair["claim"], source["text"])) else {}),
+        **({"hint": h} if (h := _hints(pair, source["text"])) else {}),
     }
 
 

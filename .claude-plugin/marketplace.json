@@ -5,6 +5,7 @@
     {
       "name": "cite-checker",
       "source": "./",
+      "version": "2.1.0",
       "description": "Check references and the claims made about them before submission."
     }
   ]

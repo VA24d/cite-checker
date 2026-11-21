@@ -127,6 +127,7 @@ def packet(refs, claims, resolutions, bodies, notices, top=5):
                     "reference_id": key,
                     "source": {k: v for k, v in source.items() if k != "text"} if source else None,
                     "passages": _initial_passages(source, claim["text"], top),
+                    **{k: claim[k] for k in ("sentence", "first_person") if claim.get(k)},
                 }
             )
     return {
@@ -199,6 +200,27 @@ def _locate(proposal, source, ref_id):
     }, None
 
 
+# Signs that a passage reports someone else's finding rather than the source's own.
+ATTRIBUTION = re.compile(
+    r"\[\d+(?:\s*[,\u2013-]\s*\d+)*\]"
+    r"|\((?:[A-Z][\w'-]+(?:\s+(?:et al\.?|and|&)\s*[A-Z]?[\w'-]*)?,?\s+(?:19|20)\d{2}[a-z]?(?:;\s*)?)+\)"
+    r"|\b[A-Z][\w'-]+\s+et al\.?\s*\(?(?:19|20)\d{2}"
+    r"|\b(?:previous|prior|earlier|other) (?:work|studies|research|reports)\b"
+    r"|\bhas been (?:shown|reported|demonstrated|found)\b"
+    r"|\b(?:reported|shown|found|proposed|observed) (?:by|in) [A-Z]"
+)
+
+
+def _attribution(text, start, end):
+    """Return the citation-like marker in the sentence around a quote, if any."""
+    left = max(text.rfind(". ", max(0, start - 300), start), text.rfind("\n", max(0, start - 300), start))
+    left = max(left + 1, start - 300, 0)
+    stops = [i for i in (text.find(". ", end), text.find("\n", end)) if i >= 0]
+    right = min([*stops, end + 300]) + 1
+    match = ATTRIBUTION.search(text[left:right])
+    return match[0] if match else ""
+
+
 def gate(run, proposals):
     _checked_sources(run)
     ids = {p["id"] for p in run["pairs"]}
@@ -240,6 +262,11 @@ def gate(run, proposals):
                     issues.append("A definitive assessment requires an exact quote.")
                 verdict = "insufficient"
                 reason = "The proposed assessment did not pass quote validation."
+        secondary = ""
+        if verdict in ("supported", "partially_supported") and evidence:
+            marks = [_attribution(source["text"], e["start"], e["end"]) for e in evidence]
+            if all(marks):
+                secondary = marks[0]
         claims.append(
             {
                 "pair_id": key,
@@ -251,6 +278,7 @@ def gate(run, proposals):
                 "proposed_verdict": proposal["verdict"] if proposal else None,
                 "caveat": str((proposal or {}).get("caveat") or "").strip(),
                 "split": bool((proposal or {}).get("split")),
+                "secondary": secondary,
                 "source": pair["source"],
                 "evidence": evidence,
                 "gate_issues": issues,
@@ -262,5 +290,6 @@ def gate(run, proposals):
         "references": run["references"],
         "claims": claims,
         "structure": run.get("structure", []),
+        "manuscript_checks": run.get("manuscript_checks", []),
         "claim_judgment": "host_agent",
     }

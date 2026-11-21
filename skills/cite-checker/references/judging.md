@@ -11,7 +11,9 @@ For each pair choose one verdict:
 
 Scope gaps are caveats, not verdicts. When the claim's finding matches but the source shows it only in a narrower setting (another species, cell line, cohort or condition), or states it more tentatively, give the verdict the finding deserves and describe the gap in an optional `caveat` field.
 
-Check numbers exactly, and any ratio or difference you can compute from them. `hint.numbers_absent_from_source` lists claim numbers that appear nowhere in the source text; such a claim is rarely `supported`.
+`hint.sentence` is the full manuscript sentence when the claim is the clause the citation covers; judge the claim, and use the sentence only to resolve what the clause refers to. `hint.first_person` means the claim reports the authors' own work ("We use X [1], a dataset of ..."): judge only what it says about the cited work. If it says nothing more than naming the cited work, it is `supported` when the passages show the source is that work.
+
+Check numbers exactly, and any ratio or difference you can compute from them. `hint.numbers_absent_from_source` lists claim numbers that appear nowhere in the source text and cannot be computed from it; such a claim is rarely `supported`. `hint.numbers_computed_from_source` gives claim numbers a script computed from source numbers ("17/500 = 3.40%"); treat them as stated if the operands are the right quantities. `hint.source_states_other_values` lists source values for a similar quantity that differ from the claim's.
 
 Every verdict except `insufficient` needs at least one quote: an exact, contiguous copy of source text from `p`, at most 300 characters, with no ellipses or edits. A quote that is not verbatim makes the verdict fail validation.
 
