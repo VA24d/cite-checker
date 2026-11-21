@@ -32,11 +32,16 @@ from scripts.sources import (
 from scripts import numeric, registry
 from scripts.structure import check as structure_check
 from scripts.structure import date_checks
+from scripts.suggest import suggest as suggest_citations
 from scripts.web import check_web, is_web
 
 
 def read_json(path):
     return json.loads(path.read_text(encoding="utf-8-sig"))
+
+
+# Required by the license; keep it in generated reports.
+CREDIT = "Checked with [cite-checker](https://github.com/VA24d/cite-checker) by VA24d."
 
 
 def write(path, content):
@@ -306,9 +311,12 @@ def markdown(report):
                 f"- **{issue['severity']}** {_escape(issue['message'])}"
                 + (f" ({where})" if where else "")
             )
+    lines.extend(_suggestions(report))
     if report["claims"]:
         lines.extend(["", "## Claim support"])
     for row in report["claims"]:
+        if row.get("candidate"):
+            continue
         label = row["verdict"].replace("_", " ").capitalize()
         lines.extend(
             [
@@ -341,6 +349,7 @@ def markdown(report):
                 ]
             )
         lines.extend(f"- {_escape(note)}" for note in row["gate_issues"])
+    lines.extend(["", "---", "", CREDIT])
     return "\n".join(lines) + "\n"
 
 
@@ -349,24 +358,89 @@ def _finalize(args):
     report = gate(_load(args.run), proposals)
     write(args.run / "report.json", jsonify(report))
     write(args.run / "report.md", markdown(report))
+    # Candidate pairs from `suggest` are reported apart and never escalated.
+    main = [c for c in report["claims"] if not c.get("candidate")]
+    candidates = [c for c in report["claims"] if c.get("candidate")]
     # A pair already answered by the strong model is final; re-escalating it would loop.
     answered = {p["pair_id"] for p in proposals if p.get("escalated")}
-    escalate = escalations(report) - answered if proposals else set()
+    escalate = escalations({"claims": main}) - answered if proposals else set()
     summary = {
         "report": str(args.run / "report.md"),
         "json": str(args.run / "report.json"),
-        "pairs": len(report["claims"]),
-        "verdicts": _counts(c["verdict"] for c in report["claims"]),
+        "pairs": len(main),
+        "verdicts": _counts(c["verdict"] for c in main),
         "triage": _triage_counts(report["references"]),
         "structure_issues": len(report.get("structure", [])),
-        "quote_validation_failures": sum(bool(c["gate_issues"]) for c in report["claims"]),
-        "not_assessed": sum(c["verdict"] == "not_assessed" for c in report["claims"]),
+        "quote_validation_failures": sum(bool(c["gate_issues"]) for c in main),
+        "not_assessed": sum(c["verdict"] == "not_assessed" for c in main),
         "escalated_answers": len(answered),
     }
+    if candidates:
+        summary["suggested_citations"] = sum(c["verdict"] == "supported" for c in candidates)
+        summary["candidates_not_assessed"] = sum(c["verdict"] == "not_assessed" for c in candidates)
     if escalate:
         shards = make_shards(args.run, size=args.escalate_size, only=escalate, name="escalate")
         summary["escalate"] = {"pairs": len(escalate), "shards": shards["shards"]}
     return summary
+
+
+def _suggestions(report):
+    """Markdown for candidate sources judged to support a claim the citation did not."""
+    found = [c for c in report["claims"] if c.get("candidate") and c["verdict"] in ("supported", "partially_supported")]
+    if not found:
+        return []
+    named = {r["id"]: r.get("source") or {} for r in report.get("suggested_references", [])}
+    cited = {}
+    for row in report["claims"]:
+        if not row.get("candidate"):
+            cited.setdefault(row["claim_id"], []).append(f"{row['reference_id']} ({row['verdict'].replace('_', ' ')})")
+    lines = ["", "## Suggested citations", "",
+             "Sources that a judge found to support a claim its own citation does not. "
+             "Check each before changing the manuscript."]
+    by_claim = {}
+    for row in found:
+        by_claim.setdefault(row["claim_id"], []).append(row)
+    for claim_id, rows in by_claim.items():
+        lines.extend(["", f"### {_escape(claim_id)}", "", f"**Claim** {_escape(rows[0]['claim'])}", "",
+                      f"**Cited** {_escape(', '.join(cited.get(claim_id, [])))}", ""])
+        for row in sorted(rows, key=lambda r: (r["verdict"] != "supported", -(r.get("match") or 0))):
+            key = row["reference_id"]
+            if key in named:
+                work = named[key]
+                year = (work.get("years") or [""])[0]
+                where = work.get("doi") and f"https://doi.org/{work['doi']}" or work.get("url") or ""
+                label = f"Not in the bibliography: {work.get('title', '')} ({year})" + (f" {where}" if where else "")
+            else:
+                label = f"Already in the bibliography: {key} (possible wrong or missing citation)"
+            quote = row["evidence"][0]["quote"] if row["evidence"] else ""
+            lines.append(f"- **{row['verdict'].replace('_', ' ')}** {_escape(label)}")
+            if quote:
+                lines.append(f"  > {_escape(quote)}")
+    return lines
+
+
+def _suggest(args):
+    report_path = args.run / "report.json"
+    if not report_path.exists():
+        raise ValueError("Run finalize first: suggest reads report.json.")
+    packet_data = read_json(args.run / "packet.json")
+    stored = read_json(args.run / "sources.json")
+    cache = args.cache or Path(os.environ.get("CITE_CHECKER_CACHE", Path.home() / ".cache" / "cite-checker"))
+    transport = Transport(cache, False, args.mailto) if args.external else None
+    added = suggest_citations(
+        packet_data, stored, read_json(report_path), transport, args.external, args.per_claim
+    )
+    write(args.run / "packet.json", jsonify(packet_data))
+    write(args.run / "sources.json", jsonify(stored))
+    shards = make_shards(args.run, size=args.size, only=set(added), name="suggest") if added else {}
+    return {
+        "candidate_pairs": len(added),
+        "from_bibliography": sum(
+            p.get("candidate") == "bibliography" for p in packet_data["pairs"] if p["id"] in set(added)
+        ),
+        "from_search": sum(p.get("candidate") == "search" for p in packet_data["pairs"] if p["id"] in set(added)),
+        "shards": shards.get("shards", []),
+    }
 
 
 def _counts(values):
@@ -476,6 +550,20 @@ def main(argv=None):
     )
     finalize.add_argument("--escalate-size", type=numbered, default=6)
     finalize.set_defaults(action=_finalize)
+    suggest_cmd = commands.add_parser(
+        "suggest", help="after finalize: find sources that may support unsupported claims"
+    )
+    suggest_cmd.add_argument("run", type=Path)
+    suggest_cmd.add_argument(
+        "--external",
+        action="store_true",
+        help="also search OpenAlex and Semantic Scholar with claim keywords (ask the user first)",
+    )
+    suggest_cmd.add_argument("--per-claim", type=numbered, default=3)
+    suggest_cmd.add_argument("--size", type=numbered, default=8)
+    suggest_cmd.add_argument("--mailto", type=_email, help="optional scholarly API contact email")
+    suggest_cmd.add_argument("--cache", type=Path)
+    suggest_cmd.set_defaults(action=_suggest)
     args = parser.parse_args(argv)
     try:
         sys.stdout.buffer.write(jsonify(args.action(args)).encode("utf-8"))

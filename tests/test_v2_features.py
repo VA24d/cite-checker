@@ -580,3 +580,64 @@ class PullRequestDiff(unittest.TestCase):
         text = _pull_request_changes("https://github.com/o/r/pull/33", transport)
         self.assertIn("+<script src=pako/2.1.0/pako.min.js>", text)
         self.assertEqual(_pull_request_changes("https://github.com/o/r/issues/33", transport), "")
+
+
+class SuggestCitations(unittest.TestCase):
+    def test_bibliography_source_is_suggested_for_unsupported_claim(self):
+        import argparse
+        from scripts.cite_checker import _finalize, _suggest
+
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            refs = [{"id": "wrong", "title": "W"}, {"id": "right", "title": "R"}, {"id": "other", "title": "O"}]
+            claims = [{"id": "c1", "text": "Subresource integrity adoption stayed below four percent of pages",
+                       "references": ["wrong"]}]
+            filler = "Unrelated material about compilers and billing files. " * 30
+            bodies = {
+                "wrong": {"text": filler, "level": "full_text", "origin": "t", "url": ""},
+                "right": {"text": filler + " Subresource integrity adoption stayed below four percent of pages we crawled.",
+                          "level": "full_text", "origin": "t", "url": ""},
+                "other": {"text": "Gardening tips for spring. " * 40, "level": "full_text", "origin": "t", "url": ""},
+            }
+            run = packet(refs, claims, {}, bodies, [])
+            (root / "sources.json").write_text(json.dumps(run.pop("sources")))
+            (root / "packet.json").write_text(json.dumps(run))
+            first = run["pairs"][0]["id"]
+            folder = root / "assessments"
+            folder.mkdir()
+            (folder / "shard-01.json").write_text(json.dumps(
+                [{"pair_id": first, "verdict": "insufficient", "reason": "Not addressed."}]))
+            fin = argparse.Namespace(run=root, assessments=[folder], escalate_size=6)
+            _finalize(fin)
+            out = _suggest(argparse.Namespace(run=root, external=False, per_claim=3, size=8, mailto=None, cache=None))
+            self.assertEqual(out["candidate_pairs"], 1)
+            shard = json.loads(Path(out["shards"][0]).read_text())
+            pair = shard["pairs"][0]
+            packet_now = json.loads((root / "packet.json").read_text())
+            self.assertEqual([p["reference_id"] for p in packet_now["pairs"] if p.get("candidate")], ["right"])
+            (folder / "suggest-01.json").write_text(json.dumps([{
+                "pair_id": pair["id"], "verdict": "supported", "reason": "Same finding.",
+                "quotes": ["Subresource integrity adoption stayed below four percent of pages we crawled."]}]))
+            summary = _finalize(fin)
+            self.assertEqual(summary["suggested_citations"], 1)
+            self.assertEqual(summary["pairs"], 1)
+            self.assertNotIn("escalate", summary)
+            report = (root / "report.md").read_text()
+            self.assertIn("Already in the bibliography: right", report)
+
+    def test_external_search_adds_suggested_reference(self):
+        from scripts.suggest import suggest
+
+        claim = "Subresource integrity adoption stayed below four percent of pages"
+        words = (claim + " in a large crawl").split()
+        work = {"id": "https://openalex.org/W1", "doi": "https://doi.org/10.1234/sri", "title": "SRI in the wild",
+                "publication_year": 2020, "authorships": [],
+                "abstract_inverted_index": {w: [i] for i, w in enumerate(words)}}
+        transport = FakeTransport({"https://api.openalex.org/works?": (200, json.dumps({"results": [work]}).encode())})
+        run = packet([{"id": "a", "title": "A"}], [{"id": "c1", "text": claim, "references": ["a"]}], {},
+                     {"a": {"text": "Gardening tips. " * 80, "level": "full_text", "origin": "t", "url": ""}}, [])
+        sources = run.pop("sources")
+        report = {"claims": [{"claim_id": "c1", "claim": claim, "reference_id": "a", "verdict": "insufficient"}]}
+        added = suggest(run, sources, report, transport, external=True)
+        self.assertEqual(len(added), 1)
+        self.assertEqual(run["suggested_references"][0]["source"]["doi"], "10.1234/sri")

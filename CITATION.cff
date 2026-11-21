@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use cite-checker, or results produced with it, credit it as below. Attribution is required by the license."
+title: "cite-checker: deterministic citation and claim checking"
+type: software
+authors:
+  - alias: VA24d
+repository-code: "https://github.com/VA24d/cite-checker"
+url: "https://github.com/VA24d/cite-checker"
+license: LicenseRef-PolyForm-Strict-1.0.0-with-attribution
+version: 2.2.0
+date-released: "2026-11-21"
+keywords:
+  - citations
+  - bibliography
+  - fact-checking
+  - research integrity

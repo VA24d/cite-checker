@@ -279,6 +279,7 @@ def gate(run, proposals):
                 "caveat": str((proposal or {}).get("caveat") or "").strip(),
                 "split": bool((proposal or {}).get("split")),
                 "secondary": secondary,
+                **({"candidate": pair["candidate"], "match": pair.get("match")} if pair.get("candidate") else {}),
                 "source": pair["source"],
                 "evidence": evidence,
                 "gate_issues": issues,
@@ -291,5 +292,6 @@ def gate(run, proposals):
         "claims": claims,
         "structure": run.get("structure", []),
         "manuscript_checks": run.get("manuscript_checks", []),
+        "suggested_references": run.get("suggested_references", []),
         "claim_judgment": "host_agent",
     }

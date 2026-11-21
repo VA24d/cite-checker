@@ -19,7 +19,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 SKILL = ROOT / "skills" / "cite-checker"
-PLUGIN_PARTS = (".claude-plugin", "agents", "commands", "skills", "README.md", "CHANGELOG.md")
+PLUGIN_PARTS = (".claude-plugin", "agents", "commands", "skills", "README.md", "CHANGELOG.md", "LICENSE", "CITATION.cff")
 
 
 def _files(base):
@@ -46,6 +46,7 @@ def _write(out, entries):
 
 def build(out=ROOT / "dist" / "cite-checker.zip"):
     entries = [(str(Path("cite-checker") / p.relative_to(SKILL)), p) for p in _files(SKILL)]
+    entries.append(("cite-checker/LICENSE", ROOT / "LICENSE"))
     return _write(out, entries)
 
 
@@ -80,6 +81,8 @@ def check(tag=None):
     for agent in (ROOT / "agents").glob("*.md"):
         if not agent.read_text(encoding="utf-8").startswith("---\n"):
             problems.append(f"{agent.name} has no front matter")
+    if not (ROOT / "LICENSE").exists():
+        problems.append("LICENSE is missing")
     if version and f"## {version}" not in (ROOT / "CHANGELOG.md").read_text(encoding="utf-8"):
         problems.append(f"CHANGELOG.md has no '## {version}' section")
     return problems

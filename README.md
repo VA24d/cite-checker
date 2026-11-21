@@ -45,6 +45,7 @@ Start a fresh session after installation. Install on the linked host if T3 Code 
 - **Bibliography check** — “Audit `references.bib` for wrong DOI, title, authors, year, or venue.”
 - **Claim check** — “Check whether each cited source supports the claims in `paper.pdf`. Report the wording that needs revision.”
 - **Closed-book check** — “Check this draft against these supplied excerpts only. Use local-only mode.”
+- **Citation finder** — “For claims the cited source does not support, find the right citation in my bibliography or in the literature.”
 
 The report separates scholarly record matches and discrepancies from claim-support judgments. Exact quotes are validated against a frozen source, with a SHA-256 digest and character offsets in the JSON output. Reference lookup uses Crossref, OpenAlex, arXiv, Europe PMC, Semantic Scholar, DataCite, OpenReview and PubMed without keys. Full text comes from arXiv, Europe PMC and open-access PDFs that OpenAlex lists; with `--mailto` it also asks Unpaywall, and with `CORE_API_KEY` it asks CORE. Semantic Scholar supplies conference venues such as ICML and NeurIPS. Keyless pools are rate-limited, and OpenAlex now caps keyless use with a daily budget shared per IP address. Set `OPENALEX_API_KEY` or `SEMANTIC_SCHOLAR_API_KEY` if you have a free key. Live indexes can change or rate-limit anonymous access. Finalization replays locally with the captured source text and assessments. Use the closed-book mode for material you want to keep entirely local.
 
@@ -59,6 +60,11 @@ Other checks are done in code because language models do them badly:
 - Packages and versions named in claims (`pako@2.1.0`, "polybool does not exist on npm") are checked against npm, PyPI, crates.io and GitHub.
 - A claim about a year after the cited work appeared, and access dates in the future or before publication, are flagged.
 - A supported claim whose quoted passage credits other work is marked as a secondary citation.
+- A cited GitHub pull request is checked against its changed lines as well as its page.
+
+## Find the right citation
+
+When none of a claim's citations supports it, `suggest` looks for one that does. It scores every other source the run captured against the claim, so a reference already in the bibliography that matches better than the cited one shows up as a likely wrong or swapped citation. With `--external` it also searches OpenAlex and Semantic Scholar using keywords from the claim (the sentence itself is never sent) and keeps works whose abstracts cover most of the claim's terms. The same cheap judges then read each candidate, and the quote gate applies as usual. Candidates judged to support the claim appear in a "Suggested citations" section of the report with the supporting quote; they do not change the claim-support counts.
 
 The CLI can also run independently:
 
@@ -68,9 +74,12 @@ python $S prepare paper.tex --bib refs.bib --out audit     # lookups, 8 in paral
 python $S shard audit                                      # ~8 pairs per compact batch
 python $S judge audit --runner "claude -p --model haiku"   # or any CLI taking a prompt
 python $S finalize audit --assessments audit/assessments   # quote gate, report, escalations
+python $S suggest audit --external                         # candidates for unsupported claims
+python $S judge audit --pattern "suggest-*.json" --runner "claude -p --model haiku"
+python $S finalize audit --assessments audit/assessments   # adds "Suggested citations"
 ```
 
-`finalize` writes `escalate-NN.json` shards for failed quotes, every contradicted or partially supported call, and `insufficient` calls on claims with a number, direction or negation. Judge those with a stronger model into `audit/assessments/escalate-NN.json` and finalize again; those answers replace the first pass and are not escalated again. See the [manifest and assessment formats](references/formats.md) and the [benchmark results](benchmarks/README.md).
+`finalize` writes `escalate-NN.json` shards for failed quotes, every contradicted or partially supported call, and `insufficient` calls on claims with a number, direction or negation. Judge those with a stronger model into `audit/assessments/escalate-NN.json` and finalize again; those answers replace the first pass and are not escalated again. See the [manifest and assessment formats](skills/cite-checker/references/formats.md) and the [benchmark results](benchmarks/README.md).
 
 ## Repository layout
 
@@ -89,3 +98,9 @@ python $S finalize audit --assessments audit/assessments   # quote gate, report,
 ## Releasing
 
 Bump `version` in `.claude-plugin/plugin.json` and `marketplace.json`, add a `## X.Y.Z` section to `CHANGELOG.md`, and check with `python package.py --check`. Then push a tag `vX.Y.Z`. The release workflow checks that the tag matches the plugin version, runs the tests, builds both archives and publishes a GitHub release with the changelog section as notes.
+
+## License
+
+[PolyForm Strict 1.0.0 with an attribution requirement](LICENSE). You may use the software for noncommercial purposes: personal use, research, teaching, and use by charities, schools and public bodies. You may not distribute it, publish modified versions, or build other works on it, and commercial use needs a separate license from the author; open an issue to ask about one.
+
+Credit is required. Any paper, report, thesis, talk or site that uses cite-checker or its results must name "cite-checker by VA24d" and link to this repository, or cite it using [CITATION.cff](CITATION.cff) (GitHub's "Cite this repository" button gives BibTeX and APA). Generated reports end with a credit line; keep it.

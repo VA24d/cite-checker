@@ -48,6 +48,15 @@ python "<skill>/scripts/cite_checker.py" finalize "<run-dir>" --assessments "<ru
 
 Quotes are validated against the frozen source text. A decisive verdict without a verbatim quote becomes `insufficient`. If the summary has `escalate`, it lists `escalate-NN.json` shards: failed quotes, every `contradicted` or `partially_supported` call, and `insufficient` calls on claims with a number, direction or negation. Re-judge only those with the strongest model available (yourself, or `judge --pattern "escalate-*.json" --runner "claude -p --model opus"`), save answers as `<run-dir>/assessments/escalate-NN.json`, and finalize again. Escalated answers replace first-pass ones, and pairs already answered in `escalate-*.json` are not escalated again. A supported claim whose quoted passage itself credits other work ("[12]", "Smith et al. (2019)", "prior work found") is marked as a secondary citation.
 
+## 3b. Suggest the right citation (optional)
+
+```sh
+python "<skill>/scripts/cite_checker.py" suggest "<run-dir>"            # other references in the bibliography
+python "<skill>/scripts/cite_checker.py" suggest "<run-dir>" --external # also search OpenAlex and Semantic Scholar
+```
+
+For each claim that none of its citations supports, `suggest` scores every other captured source against the claim and writes the best matches as `suggest-NN.json` shards. A reference already in the bibliography that matches better than the cited one is a likely wrong or swapped citation. `--external` sends keywords from each unsupported claim (never the full sentence) to OpenAlex and Semantic Scholar, so ask the user first. Judge the shards like the others (`judge --pattern "suggest-*.json"`, or `claim-judge` agents), save answers as `<run-dir>/assessments/suggest-NN.json`, and finalize again. The report's "Suggested citations" section lists the candidates judged to support the claim, with the quote; they do not change the claim-support counts.
+
 ## 4. Report
 
-Link `report.md` and `report.json`. Lead with phantom and chimeric references, then claims that are contradicted or need narrowing, then structure issues and preferred-citation advisories. Name coverage gaps (unresolved references, pairs without sources). Use only verified records for suggested corrections. Keep the manuscript unchanged unless the user asked for edits. For sources the scripts could not fetch, see [source recovery](references/formats.md#source-recovery).
+Link `report.md` and `report.json`. Lead with phantom and chimeric references, then claims that are contradicted or need narrowing (with any suggested citation), then structure issues and preferred-citation advisories. Name coverage gaps (unresolved references, pairs without sources). Use only verified records for suggested corrections. Keep the manuscript unchanged unless the user asked for edits. For sources the scripts could not fetch, see [source recovery](references/formats.md#source-recovery).

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.0
+
+- New `suggest` command finds the right citation for claims no cited source supports. It ranks every other captured source against the claim, so a better-matching reference already in the bibliography is reported as a likely wrong or swapped citation. With `--external` it also searches OpenAlex and Semantic Scholar with claim keywords. Candidates go to the same judges and quote gate, and the ones judged to support the claim appear under "Suggested citations" in the report.
+- The `/cite-check` command and the skill run `suggest` after escalation.
+- Licensed under PolyForm Strict 1.0.0 with an attribution requirement: noncommercial use only, no redistribution or derivative works, and credit to cite-checker in any work that uses it. `CITATION.cff` gives the citation, and reports end with a credit line.
+
 ## 2.1.0
 
 New checks done in code, where language models are unreliable:

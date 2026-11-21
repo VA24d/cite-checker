@@ -95,8 +95,10 @@ def compact_pair(pair, refs, sources, top):
 def make_shards(run, size=8, top=3, only=None, name="shard"):
     """Write shards/<name>-NN.json. Returns the shard paths and the skipped pair count."""
     packet, sources = _load(run)
-    refs = {r["id"]: r for r in packet["references"]}
+    refs = {r["id"]: r for r in packet["references"] + packet.get("suggested_references", [])}
     pairs = [p for p in packet["pairs"] if p["reference_id"] in sources]
+    if only is None:
+        pairs = [p for p in pairs if not p.get("candidate")]
     if only is not None:
         pairs = [p for p in pairs if p["id"] in only]
     # Keep pairs that cite one source together so a judge reads related passages at once.
