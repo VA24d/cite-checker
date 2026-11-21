@@ -4,14 +4,14 @@ An installable Agent Skill for checking academic references and the claims made 
 
 ## Install as a Claude Code plugin
 
-Push this folder to a Git repository, then in Claude Code:
+In Claude Code:
 
 ```text
-/plugin marketplace add <owner>/<repo>
+/plugin marketplace add VA24d/cite-checker
 /plugin install cite-checker@cite-checker
 ```
 
-For a local copy, use the folder path in place of `<owner>/<repo>`. The plugin adds the `cite-checker` skill, a `/cite-check` command and a `claim-judge` agent that runs on Haiku.
+For a local clone, pass its folder path instead. The plugin adds the `cite-checker` skill, a `/cite-check` command and a `claim-judge` agent that runs on Haiku.
 
 For Claude.ai or any host that takes a skill archive, run `python package.py` and upload `dist/cite-checker.zip`.
 
